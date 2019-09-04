@@ -14,8 +14,9 @@ class Tetris extends React.Component {
     }
 
     handleGameStateChange() {
+        console.log("game state changed!");
         this.setState({
-            gameOn: !this.state.gameOne
+            gameOn: !this.state.gameOn
         })
     }
 
