@@ -10,7 +10,7 @@ class GameBoard extends React.Component {
         for (let r = 2; r < 22; r++) {
             matrix.push([]);
             for (let c = 0; c < 10; c++) {
-                matrix[r - 2].push(<Block color={gameBoard[r][c]['color']} />);
+                matrix[r - 2].push(<Block active={gameBoard[r][c]['active']} pivot={gameBoard[r][c]['pivot']} color={gameBoard[r][c]['color']} />);
             }
         }
         return (
