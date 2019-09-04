@@ -16,6 +16,7 @@ class Game extends React.Component {
                 );
             }
         }
+
         this.state = {
             time: 0,
             score: 0,
@@ -149,7 +150,6 @@ class Game extends React.Component {
             activeBlockType: nextBlock,
             activeBlockOrientation: 0,
         });
-
     }
 
     drop() {
@@ -172,6 +172,7 @@ class Game extends React.Component {
 
         if (!canDrop) {
             console.log("cannot drop no more");
+            this.clearRows();
             this.releaseNextBlock();
         } else {
             // All positions clear. the block can move down. 
@@ -341,6 +342,44 @@ class Game extends React.Component {
             active: new_active,
             activeBlockOrientation: nextOrientation,
         }, () => console.log(this.state));
+    }
+
+    clearRows() {
+        const board = this.state.gameBoard;
+
+        // only add non-full rows starting from the bottom 
+        let newBoard = [];
+        for (let r = board.length - 1; r >= 0; r--) {
+            let filled = true;
+            for (let c = 0; c < 10; c++) {
+                if (!board[r][c]['filled']) {
+                    filled = false;
+                }
+            }
+            if (!filled) {
+                let row = [];
+                for (let c = 0; c < 10; c++) {
+                    row.push(board[r][c]);
+                }
+                newBoard.unshift(row);
+            }
+        }
+
+        // fill the top 
+        const numClearedRow = 22 - newBoard.length;
+        for (let r = 0; r < numClearedRow; r++) {
+            let row = [];
+            for (let c = 0; c < 10; c++) {
+                row.push({ filled: false, color: "lightgray", active: false, pivot: false });
+            }
+            newBoard.unshift(row);
+        }
+
+        this.setState({
+            gameBoard: newBoard,
+            score: this.state.score + numClearedRow,
+        });
+
     }
 
     render() {
