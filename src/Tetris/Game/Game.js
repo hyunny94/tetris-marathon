@@ -59,6 +59,7 @@ class Game extends React.Component {
         // space bar
         else if (event.keyCode === 32) {
             console.log("space");
+
         }
     }
 
@@ -83,6 +84,7 @@ class Game extends React.Component {
 
     releaseNextBlock() {
         console.log("releaseNextBlock");
+
         const nextBlock = Math.floor(Math.random() * 7);
         let nextPos = this.state.active;
         let nextColor = null;
@@ -140,18 +142,26 @@ class Game extends React.Component {
                 break;
         }
 
-        // check for game-over
-        if (this.gameOver(nextPos)) {
-            this.props.handleGameOver();
+        const board = this.state.gameBoard;
+
+        let unavailable_row = new Set();
+        for (let pos of nextPos) {
+            if (board[pos['row']][pos['col']]['filled']) {
+                unavailable_row.add(pos['row']);
+            }
         }
 
-        const gameBoard = this.state.gameBoard;
-        for (let pos of nextPos) {
-            gameBoard[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] };
-        }
+        nextPos = nextPos.map((pos) => {
+            return { ...pos, row: pos['row'] - unavailable_row.size };
+        })
+
+        nextPos.forEach((pos) => {
+            board[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
+        });
+
         this.setState({
             active: nextPos,
-            gameBoard: gameBoard,
+            gameBoard: board,
             activeBlockType: nextBlock,
             activeBlockOrientation: 0,
         });
@@ -177,6 +187,7 @@ class Game extends React.Component {
 
         if (!canDrop) {
             console.log("cannot drop no more");
+            this.checkGameOver();
             this.clearRows();
             this.releaseNextBlock();
         } else {
@@ -387,14 +398,15 @@ class Game extends React.Component {
 
     }
 
-    gameOver(nextPos) {
+    checkGameOver() {
         const board = this.state.gameBoard;
-        for (let pos of nextPos) {
-            if (board[pos['row']][pos['col']]['filled']) {
-                return true;
+        for (let r = 18; r < 20; r++) {
+            for (let c = 3; c < 7; c++) {
+                if (board[r][c]['filled']) {
+                    return this.props.handleGameOver();
+                }
             }
         }
-        return false;
     }
 
     render() {
