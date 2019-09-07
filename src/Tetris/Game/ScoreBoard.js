@@ -1,13 +1,17 @@
 import React from 'react';
 import Score from './Score';
 import PlayTime from './PlayTime';
+import NextTetromino from './NextTetromino';
+import HeldTetromino from './HeldTetromino';
 
 function ScoreBoard(props) {
     return (
         <div className="scoreBoard">
-            {/* <NextBlock nextBlock={props.nextBlock} /> */}
+            {/* <NextTetromino nextTetromino={props.nextTetromino} /> */}
             <Score score={props.score} />
             <PlayTime time={props.time} />
+            <NextTetromino color={props.nextTetColor} pos={props.nextTetPos} />
+            <HeldTetromino color={props.heldTetColor} pos={props.heldTetPos} />
         </div>
     );
 }

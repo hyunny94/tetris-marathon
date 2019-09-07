@@ -6,7 +6,8 @@ function Block(props) {
     const filled = props.filled ? 'F' : '';
     const ghost = props.ghost ? 'G' : '';
     return (
-        <div className="block" style={{ backgroundColor: props.color }}>{active}{filled}{ghost}</div>
+        // <div className="block" style={{ backgroundColor: props.color }}>{active}{filled}{ghost}</div>
+        <div className="block" style={{ backgroundColor: props.color }}></div>
     );
 }
 

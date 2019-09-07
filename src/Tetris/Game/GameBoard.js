@@ -9,6 +9,7 @@ class GameBoard extends React.Component {
 
 
     handleKeyboardInput(event) {
+        event.preventDefault();
         if (!this.props.isPaused && event.keyCode === 32) {
             console.log("hard drop");
             const ghostPieceSet = this.ghostPiece();

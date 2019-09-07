@@ -13,6 +13,40 @@
     left: 60%;
 }
 
+.nextTetBoardContainer {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    top: 80%;
+    left: 00%;
+}
+
+.heldTetBoardContainer {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    top: 200%;
+    left: 00%;
+}
+
+.nextTetBoard {
+    background-color: lightgray;
+    width: 120px;
+    height: 120px;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+}
+
+.heldTetBoard {
+    background-color: lightgray;
+    width: 120px;
+    height: 120px;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+}
+
 .block {
     width: 30px;
     height: 30px;

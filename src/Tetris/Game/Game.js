@@ -38,6 +38,9 @@ class Game extends React.Component {
             ],
             activeBlockType: null,
             activeBlockOrientation: 0,
+            heldBlock: null,
+            holdUsed: false,
+            nextTetType: Math.floor(Math.random() * 7)
         };
 
         this.drop = this.drop.bind(this);
@@ -47,7 +50,12 @@ class Game extends React.Component {
 
 
     handleKeyboardInput(event) {
+        event.preventDefault();
         switch (event.keyCode) {
+            case 16: // "shift" for holding a piece OR exchanging with held piece
+                console.log("hold or exchange");
+                !this.state.isPaused && this.holdOrExchange();
+                break;
             case 37: // left arrow
                 console.log("left");
                 !this.state.isPaused && this.moveLeftRight("left");
@@ -64,7 +72,7 @@ class Game extends React.Component {
                 console.log("down");
                 !this.state.isPaused && this.drop();
                 break;
-            case 80: // "p" for pausing the game
+            case 80: // "p" for pausing OR resuming the game
                 console.log("pause or resume");
                 this.pauseOrResume();
                 break;
@@ -80,7 +88,7 @@ class Game extends React.Component {
                 time: this.state.time + 1
             })
         }, 1000);
-        this.releaseNextBlock();
+        this.releaseNextTetromino();
         this.timerID2 = setInterval(this.drop, 1000);
         document.addEventListener("keydown", this.handleKeyboardInput, false);
     }
@@ -93,65 +101,13 @@ class Game extends React.Component {
     }
 
 
-    releaseNextBlock() {
-        console.log("releaseNextBlock");
+    releaseNextTetromino() {
+        console.log("releaseNextTetromino");
         this.setState((state, props) => {
-            const nextBlock = Math.floor(Math.random() * 7);
-            let nextPos = [];
-            let nextColor;
-            switch (nextBlock) {
-                case 0: // T
-                    nextColor = "purple";
-                    nextPos[0] = { row: 20, col: 4, pivot: false };
-                    nextPos[1] = { row: 21, col: 3, pivot: false };
-                    nextPos[2] = { row: 21, col: 4, pivot: true };
-                    nextPos[3] = { row: 21, col: 5, pivot: false };
-                    break;
-                case 1: // J
-                    nextColor = "blue";
-                    nextPos[0] = { row: 20, col: 5, pivot: false };
-                    nextPos[1] = { row: 21, col: 3, pivot: false };
-                    nextPos[2] = { row: 21, col: 4, pivot: true };
-                    nextPos[3] = { row: 21, col: 5, pivot: false };
-                    break;
-                case 2: // L
-                    nextColor = "orange";
-                    nextPos[0] = { row: 20, col: 3, pivot: false };
-                    nextPos[1] = { row: 21, col: 3, pivot: false };
-                    nextPos[2] = { row: 21, col: 4, pivot: true };
-                    nextPos[3] = { row: 21, col: 5, pivot: false };
-                    break;
-                case 3: // I 
-                    nextColor = "cyan";
-                    nextPos[0] = { row: 21, col: 3, pivot: false };
-                    nextPos[1] = { row: 21, col: 4, pivot: false };
-                    nextPos[2] = { row: 21, col: 5, pivot: true };
-                    nextPos[3] = { row: 21, col: 6, pivot: false };
-                    break;
-                case 4: // O
-                    nextColor = "yellow";
-                    nextPos[0] = { row: 20, col: 4, pivot: false };
-                    nextPos[1] = { row: 20, col: 5, pivot: false };
-                    nextPos[2] = { row: 21, col: 4, pivot: false };
-                    nextPos[3] = { row: 21, col: 5, pivot: false };
-                    break;
-                case 5: // S
-                    nextColor = "green";
-                    nextPos[0] = { row: 20, col: 4, pivot: false };
-                    nextPos[1] = { row: 20, col: 5, pivot: false };
-                    nextPos[2] = { row: 21, col: 3, pivot: false };
-                    nextPos[3] = { row: 21, col: 4, pivot: true };
-                    break;
-                case 6: // Z
-                    nextColor = "red";
-                    nextPos[0] = { row: 20, col: 3, pivot: false };
-                    nextPos[1] = { row: 20, col: 4, pivot: false };
-                    nextPos[2] = { row: 21, col: 4, pivot: true };
-                    nextPos[3] = { row: 21, col: 5, pivot: false };
-                    break;
-                default:
-                    break;
-            }
+            const nextTetromino = state.nextTetType;
+            const nextnextTet = Math.floor(Math.random() * 7);
+            let nextPos = this.tetrominoTypeToNextPos(nextTetromino);
+            let nextColor = this.tetrominoTypeToColor(nextTetromino);
             // check if there are filled blocks in the place of next new blocks
             const board = state.gameBoard;
             let unavailable_row = new Set();
@@ -163,7 +119,6 @@ class Game extends React.Component {
             nextPos = nextPos.map((pos) => {
                 return { ...pos, row: pos['row'] - unavailable_row.size };
             })
-
             // update board
             nextPos.forEach((pos) => {
                 board[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
@@ -172,8 +127,9 @@ class Game extends React.Component {
             return {
                 active: nextPos,
                 gameBoard: board,
-                activeBlockType: nextBlock,
+                activeBlockType: nextTetromino,
                 activeBlockOrientation: 0,
+                nextTetType: nextnextTet,
             }
         });
     }
@@ -193,6 +149,7 @@ class Game extends React.Component {
                     board[pos['row']][pos['col']]['active'] = false
                 }
                 canDrop = false;
+                break;
             }
         }
 
@@ -200,18 +157,19 @@ class Game extends React.Component {
             console.log("cannot drop no more");
             this.checkGameOver();
             this.clearRows();
-            this.releaseNextBlock();
+            this.releaseNextTetromino();
+            this.setState({
+                holdUsed: false,
+            })
         } else {
             // All positions clear. the block can move down. 
             // active ones => inactive
-            let color = null;
-            for (let pos of active) {
-                color = board[pos['row']][pos['col']]['color'];
-                board[pos['row']][pos['col']] = { filled: false, color: "lightgray", active: false, pivot: false };
-            }
+            let color = this.tetrominoTypeToColor(this.state.activeBlockType);
+            board = this.currActiveToInactive(board);
             // new positions => active
             for (let pos of active) {
-                board[pos['row'] + 1][pos['col']] = { filled: true, color: color, active: true, pivot: pos['pivot'] };
+                board[pos['row'] + 1][pos['col']] =
+                    { filled: true, color: color, active: true, pivot: pos['pivot'] };
             }
             this.setState({
                 gameBoard: board,
@@ -344,11 +302,8 @@ class Game extends React.Component {
         }
         // rotate
         // active ones => inactive
-        let color = null;
-        for (let pos of active) {
-            color = board[pos['row']][pos['col']]['color'];
-            board[pos['row']][pos['col']] = { filled: false, color: "lightgray", active: false, pivot: false };
-        }
+        let color = this.tetrominoTypeToColor(this.state.activeBlockType);
+        board = this.currActiveToInactive(board);
 
         // new positions => active
         let new_active = []
@@ -419,16 +374,9 @@ class Game extends React.Component {
     }
 
     handleSpaceInput(ghostPieceSet) {
-        const board = this.state.gameBoard;
-        const active = this.state.active;
-        let blockColor;
-
-        // active ones => inactive 
-        active.forEach((pos) => {
-            blockColor = board[pos['row']][pos['col']]['color'];
-            board[pos['row']][pos['col']] =
-                { filled: false, color: "lightgray", active: false, pivot: false };
-        });
+        // event.preventDefault();
+        const board = this.currActiveToInactive(this.state.gameBoard);
+        const blockColor = this.tetrominoTypeToColor(this.state.activeBlockType);
 
         // inactive ones => active 
         let newActive = [];
@@ -468,6 +416,129 @@ class Game extends React.Component {
         });
     }
 
+    holdOrExchange() {
+        if (!this.state.holdUsed) {
+            const heldBlock = this.state.heldBlock;
+            // Exchange
+            // make current active to inactive 
+            let board = this.currActiveToInactive(this.state.gameBoard);
+
+            if (heldBlock) {
+                const newActive = this.tetrominoTypeToNextPos(heldBlock);
+                const newColor = this.tetrominoTypeToColor(heldBlock);
+                // make new position depending on [heldBlock] active
+                board = this.currInactiveToActive(board, newActive, newColor);
+                // update currBlockType, currBlockOrientation, heldBlock, holdUsed, active, board
+                this.setState({
+                    activeBlockType: heldBlock,
+                    activeBlockOrientation: 0,
+                    heldBlock: this.state.activeBlockType,
+                    holdUsed: true,
+                    active: newActive,
+                    board: board,
+                })
+            }
+            // Very First Hold
+            else {
+                // heldBlock, holdUsed, active, board
+                const nextTetromino = this.state.nextTetType
+                const newActive = this.tetrominoTypeToNextPos(nextTetromino);
+                const newColor = this.tetrominoTypeToColor(nextTetromino);
+                board = this.currInactiveToActive(board, newActive, newColor);
+                this.setState({
+                    activeBlockType: nextTetromino,
+                    activeBlockOrientation: 0,
+                    heldBlock: this.state.activeBlockType,
+                    holdUsed: true,
+                    active: newActive,
+                    board: board,
+                })
+            }
+        }
+    }
+
+    tetrominoTypeToNextPos(type) {
+        switch (type) {
+            case 0: // T
+                return [{ row: 20, col: 4, pivot: false },
+                { row: 21, col: 3, pivot: false },
+                { row: 21, col: 4, pivot: true },
+                { row: 21, col: 5, pivot: false }]
+            case 1: // J
+                return [{ row: 20, col: 5, pivot: false },
+                { row: 21, col: 3, pivot: false },
+                { row: 21, col: 4, pivot: true },
+                { row: 21, col: 5, pivot: false }]
+            case 2: // L
+                return [{ row: 20, col: 3, pivot: false },
+                { row: 21, col: 3, pivot: false },
+                { row: 21, col: 4, pivot: true },
+                { row: 21, col: 5, pivot: false }]
+            case 3: // I 
+                return [{ row: 21, col: 3, pivot: false },
+                { row: 21, col: 4, pivot: false },
+                { row: 21, col: 5, pivot: true },
+                { row: 21, col: 6, pivot: false }]
+            case 4: // O
+                return [{ row: 20, col: 4, pivot: false },
+                { row: 20, col: 5, pivot: false },
+                { row: 21, col: 4, pivot: false },
+                { row: 21, col: 5, pivot: false }]
+            case 5: // S
+                return [{ row: 20, col: 4, pivot: false },
+                { row: 20, col: 5, pivot: false },
+                { row: 21, col: 3, pivot: false },
+                { row: 21, col: 4, pivot: true }]
+            case 6: // Z
+                return [{ row: 20, col: 3, pivot: false },
+                { row: 20, col: 4, pivot: false },
+                { row: 21, col: 4, pivot: true },
+                { row: 21, col: 5, pivot: false }]
+            default:
+                return;
+        }
+    }
+
+    tetrominoTypeToColor(type) {
+        switch (type) {
+            case 0: // T
+                return "purple";
+            case 1: // J
+                return "blue";
+            case 2: // L
+                return "orange";
+            case 3: // I 
+                return "cyan";
+            case 4: // O
+                return "yellow";
+            case 5: // S
+                return "green";
+            case 6: // Z
+                return "red";
+            default:
+                return;
+        }
+    }
+
+    // return new [gameBoard] with curr [active] turned off
+    currActiveToInactive(board) {
+        const active = this.state.active;
+        active.forEach((pos) => {
+            board[pos['row']][pos['col']] =
+                { filled: false, color: "lightgray", active: false, pivot: false };
+        })
+        return board;
+    }
+
+    // return new [board] with [newActive] turned on. Each block has [newColor].
+    currInactiveToActive(board, newActive, newColor) {
+        newActive.forEach((pos) => {
+            board[pos['row']][pos['col']] =
+                { filled: true, color: newColor, active: true, pivot: pos['pivot'] };
+        })
+        return board;
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -478,9 +549,13 @@ class Game extends React.Component {
                     isPaused={this.state.isPaused}
                 />
                 <ScoreBoard
-                    // nextBlock={this.props.nextBlock}
+                    // nextTetromino={this.props.nextTetromino}
                     time={this.state.time}
                     score={this.state.score}
+                    nextTetColor={this.tetrominoTypeToColor(this.state.nextTetType)}
+                    nextTetPos={this.tetrominoTypeToNextPos(this.state.nextTetType)}
+                    heldTetColor={this.tetrominoTypeToColor(this.state.heldBlock)}
+                    heldTetPos={this.tetrominoTypeToNextPos(this.state.heldBlock)}
                 />
             </React.Fragment>
         );
