@@ -10,7 +10,7 @@ function NextTetromino(props) {
     for (let r = 0; r < 4; r++) {
         let newRow = [];
         for (let c = 0; c < 4; c++) {
-            newRow.push(<Block color="lightgray" />)
+            newRow.push(<Block color="#2C2726" />)
         }
         nextTet.push(newRow);
     }
@@ -22,7 +22,7 @@ function NextTetromino(props) {
     return (
         <div className="nextTetBoardContainer">
             <h1>Next:</h1>
-            <div className="nextTetBoard">
+            <div className="tetBoard">
                 {nextTet}
             </div>
         </div>

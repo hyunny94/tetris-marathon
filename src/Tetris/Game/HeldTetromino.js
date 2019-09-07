@@ -9,7 +9,7 @@ function HeldTetromino(props) {
     for (let r = 0; r < 4; r++) {
         let newRow = [];
         for (let c = 0; c < 4; c++) {
-            newRow.push(<Block color="lightgray" />)
+            newRow.push(<Block color="#2C2726" />)
         }
         heldTet.push(newRow);
     }
@@ -22,7 +22,7 @@ function HeldTetromino(props) {
     return (
         <div className="heldTetBoardContainer">
             <h1>Hold:</h1>
-            <div className="heldTetBoard">
+            <div className="tetBoard">
                 {heldTet}
             </div>
         </div>

@@ -11,7 +11,7 @@ class Game extends React.Component {
             gameBoard.push([]);
             for (let c = 0; c < 10; c++) {
                 gameBoard[r].push(
-                    { filled: false, color: "lightgray", active: false, pivot: false }
+                    { filled: false, color: "#2C2726", active: false, pivot: false }
                 );
             }
         }
@@ -20,7 +20,7 @@ class Game extends React.Component {
          * Q. Why would this be any different from above? This doesn't work.. 
          * const gameBoard = new Array(40).fill(
          * new Array(10).fill(
-         * { filled: false, color: "lightgray", active: false, pivot: false }
+         * { filled: false, color: "#2C2726", active: false, pivot: false }
          * )
          * ); */
 
@@ -217,7 +217,7 @@ class Game extends React.Component {
             for (let pos of active) {
                 let prev_color = board[pos['row']][pos['col']]['color'];
                 let prev_pivot = board[pos['row']][pos['col']]['pivot'];
-                board[pos['row']][pos['col']] = { filled: false, color: "lightgray", active: false, pivot: false };
+                board[pos['row']][pos['col']] = { filled: false, color: "#2C2726", active: false, pivot: false };
                 board[pos['row']][pos['col'] + dir_int] = { filled: true, color: prev_color, active: true, pivot: prev_pivot };
             }
             this.setState({
@@ -350,7 +350,7 @@ class Game extends React.Component {
         for (let r = 0; r < numClearedRow; r++) {
             let row = [];
             for (let c = 0; c < 10; c++) {
-                row.push({ filled: false, color: "lightgray", active: false, pivot: false });
+                row.push({ filled: false, color: "#2C2726", active: false, pivot: false });
             }
             newBoard.unshift(row);
         }
@@ -502,19 +502,19 @@ class Game extends React.Component {
     tetrominoTypeToColor(type) {
         switch (type) {
             case 0: // T
-                return "purple";
+                return "#C608F4";
             case 1: // J
-                return "blue";
+                return "#134EEA";
             case 2: // L
-                return "orange";
+                return "#EFC30E";
             case 3: // I 
                 return "cyan";
             case 4: // O
                 return "yellow";
             case 5: // S
-                return "green";
+                return "#24EA13";
             case 6: // Z
-                return "red";
+                return "#F83F08";
             default:
                 return;
         }
@@ -525,7 +525,7 @@ class Game extends React.Component {
         const active = this.state.active;
         active.forEach((pos) => {
             board[pos['row']][pos['col']] =
-                { filled: false, color: "lightgray", active: false, pivot: false };
+                { filled: false, color: "#2C2726", active: false, pivot: false };
         })
         return board;
     }

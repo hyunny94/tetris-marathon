@@ -61,6 +61,13 @@ class GameBoard extends React.Component {
 
     }
 
+    ghostColor() {
+        const pos = this.props.active[0];
+        if (pos['row'] === -1) {
+            return "#2C2726";
+        }
+        return this.props.gameBoard[pos['row']][pos['col']]['color'];
+    }
 
     render() {
         const gameBoard = this.props.gameBoard;
@@ -73,6 +80,7 @@ class GameBoard extends React.Component {
                 let isGhostPiece = ghostPieceSet.has("" + r + c);
                 newRow.push(<Block
                     ghost={isGhostPiece}
+                    ghostColor={this.ghostColor()}
                     active={gameBoard[r][c]['active']}
                     pivot={gameBoard[r][c]['pivot']}
                     color={gameBoard[r][c]['color']}

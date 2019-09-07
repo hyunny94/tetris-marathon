@@ -1,13 +1,12 @@
 import React from 'react';
 
 function Block(props) {
-    // const color = props.pivot ? "white" : props.color;
-    const active = props.active ? 'A' : '';
-    const filled = props.filled ? 'F' : '';
-    const ghost = props.ghost ? 'G' : '';
+    const borderColor = props.ghost ? props.ghostColor : "#574D4B";
+    // const borderType = props.ghost ? "solid" : "groove";
+
     return (
         // <div className="block" style={{ backgroundColor: props.color }}>{active}{filled}{ghost}</div>
-        <div className="block" style={{ backgroundColor: props.color }}></div>
+        <div className="block" style={{ backgroundColor: props.color, borderColor }}></div>
     );
 }
 
