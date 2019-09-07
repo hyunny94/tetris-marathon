@@ -33,33 +33,27 @@ class Game extends React.Component {
 
         this.drop = this.drop.bind(this);
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
+        this.handleSpaceInput = this.handleSpaceInput.bind(this);
     }
 
     handleKeyboardInput(event) {
-        // left arrow
-        if (event.keyCode === 37) {
-            console.log("left");
-            this.moveLeftRight("left");
-        }
-        // up arrow
-        else if (event.keyCode === 38) {
-            console.log("up");
-            this.rotate();
-        }
-        // right arrow
-        else if (event.keyCode === 39) {
-            console.log("right");
-            this.moveLeftRight("right");
-        }
-        // down arrow
-        else if (event.keyCode === 40) {
-            console.log("down");
-            this.drop();
-        }
-        // space bar
-        else if (event.keyCode === 32) {
-            console.log("space");
-
+        switch (event.keyCode) {
+            case 37: // left arrow
+                console.log("left");
+                this.moveLeftRight("left");
+                break;
+            case 38: // up arrow
+                console.log("up");
+                this.rotate();
+                break;
+            case 39: // right arrow
+                console.log("right");
+                this.moveLeftRight("right");
+                break;
+            case 40: // down arrow
+                console.log("down");
+                this.drop();
+                break;
         }
     }
 
@@ -85,90 +79,92 @@ class Game extends React.Component {
     releaseNextBlock() {
         console.log("releaseNextBlock");
 
-        const nextBlock = Math.floor(Math.random() * 7);
-        let nextPos = this.state.active;
-        let nextColor = null;
-        switch (nextBlock) {
-            case 0: // T
-                nextColor = "purple";
-                nextPos[0] = { row: 20, col: 4, pivot: false };
-                nextPos[1] = { row: 21, col: 3, pivot: false };
-                nextPos[2] = { row: 21, col: 4, pivot: true };
-                nextPos[3] = { row: 21, col: 5, pivot: false };
-                break;
-            case 1: // J
-                nextColor = "blue";
-                nextPos[0] = { row: 20, col: 5, pivot: false };
-                nextPos[1] = { row: 21, col: 3, pivot: false };
-                nextPos[2] = { row: 21, col: 4, pivot: true };
-                nextPos[3] = { row: 21, col: 5, pivot: false };
-                break;
-            case 2: // L
-                nextColor = "orange";
-                nextPos[0] = { row: 20, col: 3, pivot: false };
-                nextPos[1] = { row: 21, col: 3, pivot: false };
-                nextPos[2] = { row: 21, col: 4, pivot: true };
-                nextPos[3] = { row: 21, col: 5, pivot: false };
-                break;
-            case 3: // I 
-                nextColor = "cyan";
-                nextPos[0] = { row: 21, col: 3, pivot: false };
-                nextPos[1] = { row: 21, col: 4, pivot: false };
-                nextPos[2] = { row: 21, col: 5, pivot: true };
-                nextPos[3] = { row: 21, col: 6, pivot: false };
-                break;
-            case 4: // O
-                nextColor = "yellow";
-                nextPos[0] = { row: 20, col: 4, pivot: false };
-                nextPos[1] = { row: 20, col: 5, pivot: false };
-                nextPos[2] = { row: 21, col: 4, pivot: false };
-                nextPos[3] = { row: 21, col: 5, pivot: false };
-                break;
-            case 5: // S
-                nextColor = "green";
-                nextPos[0] = { row: 20, col: 4, pivot: false };
-                nextPos[1] = { row: 20, col: 5, pivot: false };
-                nextPos[2] = { row: 21, col: 3, pivot: false };
-                nextPos[3] = { row: 21, col: 4, pivot: true };
-                break;
-            case 6: // Z
-                nextColor = "red";
-                nextPos[0] = { row: 20, col: 3, pivot: false };
-                nextPos[1] = { row: 20, col: 4, pivot: false };
-                nextPos[2] = { row: 21, col: 4, pivot: true };
-                nextPos[3] = { row: 21, col: 5, pivot: false };
-                break;
-            default:
-                break;
-        }
+        this.setState((state, props) => {
 
-        const board = this.state.gameBoard;
-
-        let unavailable_row = new Set();
-        for (let pos of nextPos) {
-            if (board[pos['row']][pos['col']]['filled']) {
-                unavailable_row.add(pos['row']);
+            const nextBlock = Math.floor(Math.random() * 7);
+            let nextPos = [];
+            let nextColor;
+            switch (nextBlock) {
+                case 0: // T
+                    nextColor = "purple";
+                    nextPos[0] = { row: 20, col: 4, pivot: false };
+                    nextPos[1] = { row: 21, col: 3, pivot: false };
+                    nextPos[2] = { row: 21, col: 4, pivot: true };
+                    nextPos[3] = { row: 21, col: 5, pivot: false };
+                    break;
+                case 1: // J
+                    nextColor = "blue";
+                    nextPos[0] = { row: 20, col: 5, pivot: false };
+                    nextPos[1] = { row: 21, col: 3, pivot: false };
+                    nextPos[2] = { row: 21, col: 4, pivot: true };
+                    nextPos[3] = { row: 21, col: 5, pivot: false };
+                    break;
+                case 2: // L
+                    nextColor = "orange";
+                    nextPos[0] = { row: 20, col: 3, pivot: false };
+                    nextPos[1] = { row: 21, col: 3, pivot: false };
+                    nextPos[2] = { row: 21, col: 4, pivot: true };
+                    nextPos[3] = { row: 21, col: 5, pivot: false };
+                    break;
+                case 3: // I 
+                    nextColor = "cyan";
+                    nextPos[0] = { row: 21, col: 3, pivot: false };
+                    nextPos[1] = { row: 21, col: 4, pivot: false };
+                    nextPos[2] = { row: 21, col: 5, pivot: true };
+                    nextPos[3] = { row: 21, col: 6, pivot: false };
+                    break;
+                case 4: // O
+                    nextColor = "yellow";
+                    nextPos[0] = { row: 20, col: 4, pivot: false };
+                    nextPos[1] = { row: 20, col: 5, pivot: false };
+                    nextPos[2] = { row: 21, col: 4, pivot: false };
+                    nextPos[3] = { row: 21, col: 5, pivot: false };
+                    break;
+                case 5: // S
+                    nextColor = "green";
+                    nextPos[0] = { row: 20, col: 4, pivot: false };
+                    nextPos[1] = { row: 20, col: 5, pivot: false };
+                    nextPos[2] = { row: 21, col: 3, pivot: false };
+                    nextPos[3] = { row: 21, col: 4, pivot: true };
+                    break;
+                case 6: // Z
+                    nextColor = "red";
+                    nextPos[0] = { row: 20, col: 3, pivot: false };
+                    nextPos[1] = { row: 20, col: 4, pivot: false };
+                    nextPos[2] = { row: 21, col: 4, pivot: true };
+                    nextPos[3] = { row: 21, col: 5, pivot: false };
+                    break;
+                default:
+                    break;
             }
-        }
 
-        nextPos = nextPos.map((pos) => {
-            return { ...pos, row: pos['row'] - unavailable_row.size };
-        })
+            const board = state.gameBoard;
 
-        nextPos.forEach((pos) => {
-            board[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
-        });
+            let unavailable_row = new Set();
+            for (let pos of nextPos) {
+                if (board[pos['row']][pos['col']]['filled']) {
+                    unavailable_row.add(pos['row']);
+                }
+            }
 
-        this.setState({
-            active: nextPos,
-            gameBoard: board,
-            activeBlockType: nextBlock,
-            activeBlockOrientation: 0,
+            nextPos = nextPos.map((pos) => {
+                return { ...pos, row: pos['row'] - unavailable_row.size };
+            })
+
+            nextPos.forEach((pos) => {
+                board[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
+            });
+
+            return {
+                active: nextPos,
+                gameBoard: board,
+                activeBlockType: nextBlock,
+                activeBlockOrientation: 0,
+            }
         });
     }
 
     drop() {
-        console.log("drop");
         let canDrop = true;
         let active = this.state.active;
         let board = this.state.gameBoard;
@@ -345,8 +341,6 @@ class Game extends React.Component {
             let row = pivot['row'] + pos['row'];
             let col = pivot['col'] + pos['col'];
 
-            console.log("row: " + row + ', col: ' + col);
-
             new_active.push({ row: row, col: col, pivot: pos['pivot'] });
             board[row][col] = { filled: true, color: color, active: true, pivot: pos['pivot'] };
         }
@@ -357,7 +351,7 @@ class Game extends React.Component {
             gameBoard: board,
             active: new_active,
             activeBlockOrientation: nextOrientation,
-        }, () => console.log(this.state));
+        });
     }
 
     clearRows() {
@@ -365,7 +359,7 @@ class Game extends React.Component {
 
         // only add non-full rows starting from the bottom 
         let newBoard = [];
-        for (let r = board.length - 1; r >= 0; r--) {
+        for (let r = board.length - 1; r >= 20; r--) {
             let filled = true;
             for (let c = 0; c < 10; c++) {
                 if (!board[r][c]['filled']) {
@@ -378,6 +372,10 @@ class Game extends React.Component {
                     row.push(board[r][c]);
                 }
                 newBoard.unshift(row);
+            }
+            else {
+                console.log("a row cleared!");
+                console.log(r);
             }
         }
 
@@ -393,7 +391,7 @@ class Game extends React.Component {
 
         this.setState({
             gameBoard: newBoard,
-            score: this.state.score + numClearedRow,
+            score: this.state.score + numClearedRow - 20,
         });
 
     }
@@ -409,10 +407,46 @@ class Game extends React.Component {
         }
     }
 
+    handleSpaceInput(ghostPieceSet) {
+        const board = this.state.gameBoard;
+        const active = this.state.active;
+        let blockColor;
+
+        // active ones => inactive 
+        active.forEach((pos) => {
+            blockColor = board[pos['row']][pos['col']]['color'];
+            board[pos['row']][pos['col']] =
+                { filled: false, color: "lightgray", active: false, pivot: false };
+        });
+
+        // inactive ones => active 
+        let newActive = [];
+        ghostPieceSet.forEach((pos) => {
+            const row = Math.floor(Number(pos) / 10);
+            const col = Number(pos) % 10;
+            board[row][col] = { filled: true, color: blockColor, active: true, pivot: false };
+            newActive.push({ row: row, col: col, pivot: false });
+        })
+
+        this.setState({
+            gameBoard: board,
+            active: newActive
+        }, () => {
+            clearInterval(this.timerID2);
+            this.drop();
+            // this.clearRows();
+            this.timerID2 = setInterval(this.drop, 1000);
+        });
+    }
+
     render() {
         return (
             <React.Fragment>
-                <GameBoard gameBoard={this.state.gameBoard} />
+                <GameBoard
+                    gameBoard={this.state.gameBoard}
+                    active={this.state.active}
+                    handleSpaceInput={this.handleSpaceInput}
+                />
                 <ScoreBoard
                     // nextBlock={this.props.nextBlock}
                     time={this.state.time}
