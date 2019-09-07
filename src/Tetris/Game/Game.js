@@ -16,10 +16,19 @@ class Game extends React.Component {
             }
         }
 
+        /** 
+         * Q. Why would this be any different from above? This doesn't work.. 
+         * const gameBoard = new Array(40).fill(
+         * new Array(10).fill(
+         * { filled: false, color: "lightgray", active: false, pivot: false }
+         * )
+         * ); */
+
         this.state = {
             time: 0,
             score: 0,
             isAlive: true,
+            isPaused: false,
             gameBoard: gameBoard,
             active: [
                 { row: -1, col: -1, pivot: false },
@@ -36,39 +45,46 @@ class Game extends React.Component {
         this.handleSpaceInput = this.handleSpaceInput.bind(this);
     }
 
+
     handleKeyboardInput(event) {
         switch (event.keyCode) {
             case 37: // left arrow
                 console.log("left");
-                this.moveLeftRight("left");
+                !this.state.isPaused && this.moveLeftRight("left");
                 break;
             case 38: // up arrow
                 console.log("up");
-                this.rotate();
+                !this.state.isPaused && this.rotate();
                 break;
             case 39: // right arrow
                 console.log("right");
-                this.moveLeftRight("right");
+                !this.state.isPaused && this.moveLeftRight("right");
                 break;
             case 40: // down arrow
                 console.log("down");
-                this.drop();
+                !this.state.isPaused && this.drop();
+                break;
+            case 80: // "p" for pausing the game
+                console.log("pause or resume");
+                this.pauseOrResume();
+                break;
+            default:
                 break;
         }
     }
 
-    componentDidMount() {
 
+    componentDidMount() {
         this.timerID = setInterval(() => {
             this.setState({
                 time: this.state.time + 1
             })
         }, 1000);
-
         this.releaseNextBlock();
         this.timerID2 = setInterval(this.drop, 1000);
         document.addEventListener("keydown", this.handleKeyboardInput, false);
     }
+
 
     componentWillUnmount() {
         clearInterval(this.timerID);
@@ -76,11 +92,10 @@ class Game extends React.Component {
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
+
     releaseNextBlock() {
         console.log("releaseNextBlock");
-
         this.setState((state, props) => {
-
             const nextBlock = Math.floor(Math.random() * 7);
             let nextPos = [];
             let nextColor;
@@ -137,20 +152,19 @@ class Game extends React.Component {
                 default:
                     break;
             }
-
+            // check if there are filled blocks in the place of next new blocks
             const board = state.gameBoard;
-
             let unavailable_row = new Set();
-            for (let pos of nextPos) {
+            nextPos.forEach((pos) => {
                 if (board[pos['row']][pos['col']]['filled']) {
                     unavailable_row.add(pos['row']);
                 }
-            }
-
+            });
             nextPos = nextPos.map((pos) => {
                 return { ...pos, row: pos['row'] - unavailable_row.size };
             })
 
+            // update board
             nextPos.forEach((pos) => {
                 board[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
             });
@@ -163,6 +177,7 @@ class Game extends React.Component {
             }
         });
     }
+
 
     drop() {
         let canDrop = true;
@@ -317,9 +332,9 @@ class Game extends React.Component {
             return;
         }
 
-        // 1. new positions are filled with inactive block.
         let next_pos = next_pos_dict[blockType][blockOrientation];
 
+        // 1. if any of the new positions after the rotation is filled.
         for (let pos of next_pos) {
             let row = pivot['row'] + pos['row'];
             let col = pivot['col'] + pos['col'];
@@ -372,10 +387,6 @@ class Game extends React.Component {
                     row.push(board[r][c]);
                 }
                 newBoard.unshift(row);
-            }
-            else {
-                console.log("a row cleared!");
-                console.log(r);
             }
         }
 
@@ -434,8 +445,26 @@ class Game extends React.Component {
         }, () => {
             clearInterval(this.timerID2);
             this.drop();
-            // this.clearRows();
             this.timerID2 = setInterval(this.drop, 1000);
+        });
+    }
+
+    pauseOrResume() {
+        const isPaused = this.state.isPaused;
+        if (isPaused) {
+            this.timerID = setInterval(() => {
+                this.setState({
+                    time: this.state.time + 1
+                })
+            }, 1000);
+            this.timerID2 = setInterval(this.drop, 1000);
+        }
+        else {
+            clearInterval(this.timerID);
+            clearInterval(this.timerID2);
+        }
+        this.setState({
+            isPaused: !isPaused
         });
     }
 
@@ -446,6 +475,7 @@ class Game extends React.Component {
                     gameBoard={this.state.gameBoard}
                     active={this.state.active}
                     handleSpaceInput={this.handleSpaceInput}
+                    isPaused={this.state.isPaused}
                 />
                 <ScoreBoard
                     // nextBlock={this.props.nextBlock}

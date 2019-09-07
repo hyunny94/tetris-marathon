@@ -7,26 +7,29 @@ class GameBoard extends React.Component {
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
     }
 
+
     handleKeyboardInput(event) {
-        if (event.keyCode === 32) {
+        if (!this.props.isPaused && event.keyCode === 32) {
             console.log("hard drop");
             const ghostPieceSet = this.ghostPiece();
             this.props.handleSpaceInput(ghostPieceSet);
         }
     }
 
+
     componentDidMount() {
         document.addEventListener("keydown", this.handleKeyboardInput, false);
     }
+
 
     componentWillUnmount() {
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
+
     ghostPiece() {
         const board = this.props.gameBoard;
         let ghostPieces = this.props.active;
-
 
         // update [ghostPieces] to the location that we would drop to.
         let canDrop = true;
@@ -40,10 +43,6 @@ class GameBoard extends React.Component {
                 }
                 if (row === 39 ||
                     (!board[row + 1][col]['active'] && board[row + 1][col]['filled'])) {
-                    // turn this collection of blocks to inactive,
-                    // for (let pos of active) {
-                    //     board[pos['row']][pos['col']]['active'] = false
-                    // }
                     canDrop = false;
                 }
             }
@@ -60,6 +59,7 @@ class GameBoard extends React.Component {
         return ghostPieceSet;
 
     }
+
 
     render() {
         const gameBoard = this.props.gameBoard;
@@ -87,7 +87,6 @@ class GameBoard extends React.Component {
             </div>
         );
     }
-
 }
 
 export default GameBoard;
