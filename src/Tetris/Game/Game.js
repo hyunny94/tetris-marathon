@@ -419,11 +419,13 @@ class Game extends React.Component {
     holdOrExchange() {
         if (!this.state.holdUsed) {
             const heldBlock = this.state.heldBlock;
+            console.log("curr held block is");
+            console.log(heldBlock);
             // Exchange
             // make current active to inactive 
             let board = this.currActiveToInactive(this.state.gameBoard);
 
-            if (heldBlock) {
+            if (heldBlock !== null) {
                 const newActive = this.tetrominoTypeToNextPos(heldBlock);
                 const newColor = this.tetrominoTypeToColor(heldBlock);
                 // make new position depending on [heldBlock] active
