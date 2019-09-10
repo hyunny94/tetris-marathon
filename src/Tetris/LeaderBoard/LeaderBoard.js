@@ -23,7 +23,7 @@ function LeaderBoard(props) {
                     {leaders}
                 </tbody>
             </table>
-            <ChallengeButton handleGameStart={props.handleGameStart} />
+            <ChallengeButton handleGameStart={props.handleInitialGameStart} />
         </div>
     );
 }

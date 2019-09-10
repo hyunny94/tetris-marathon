@@ -367,7 +367,7 @@ class Game extends React.Component {
         for (let r = 18; r < 20; r++) {
             for (let c = 3; c < 7; c++) {
                 if (board[r][c]['filled']) {
-                    return this.props.handleGameOver();
+                    return this.props.handleGameOver(this.state.score);
                 }
             }
         }
