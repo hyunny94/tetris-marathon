@@ -9,7 +9,7 @@ function ScoreBoard(props) {
         <div className="scoreBoard">
             {/* <NextTetromino nextTetromino={props.nextTetromino} /> */}
             <Score score={props.score} />
-            <PlayTime time={props.time} />
+            <PlayTime level={props.level} />
             <NextTetromino color={props.nextTetColor} pos={props.nextTetPos} />
             <HeldTetromino color={props.heldTetColor} pos={props.heldTetPos} />
         </div>
