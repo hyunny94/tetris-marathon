@@ -1,6 +1,6 @@
 import React from 'react';
-import GameBoard from './GameBoard';
-import ScoreBoard from './ScoreBoard';
+import GameBoard from './GameBoard/GameBoard';
+import ScoreBoard from './ScoreBoard/ScoreBoard';
 import './game.css';
 
 class Game extends React.Component {
@@ -20,6 +20,7 @@ class Game extends React.Component {
             time: 0,
             score: 0,
             totalLinesCleared: 0, // level is 1 + [totalLinesCleared] // 10
+            combo: 0,
             isAlive: true,
             isPaused: false,
             gameBoard: gameBoard,
@@ -344,9 +345,32 @@ class Game extends React.Component {
             newBoard.unshift(row);
         }
 
+        const level = this.getLevel();
+        let scoreIncrement;
+        switch (numClearedRow) {
+            case 0:
+                scoreIncrement = 0;
+                break;
+            case 1:
+                scoreIncrement = 100 * level + 50 * this.state.combo * level;
+                break;
+            case 2:
+                scoreIncrement = 300 * level + 50 * this.state.combo * level;
+                break;
+            case 3:
+                scoreIncrement = 500 * level + 50 * this.state.combo * level;
+                break;
+            case 4:
+                scoreIncrement = 800 * level + 50 * this.state.combo * level;
+                break;
+        }
+        const newCombo = numClearedRow > 0 ? this.state.combo + 1 : 0;
+
         this.setState({
             gameBoard: newBoard,
             totalLinesCleared: this.state.totalLinesCleared + numClearedRow,
+            combo: newCombo,
+            score: this.state.score + scoreIncrement,
         }, this.adjustSoftDropSpeed());
 
     }
@@ -523,11 +547,11 @@ class Game extends React.Component {
     }
 
     getLevel() {
-        return 1 + Math.floor(this.state.totalLinesCleared / 1);
+        return 1 + Math.floor(this.state.totalLinesCleared / 10);
     }
 
-    // speed increases by 20ms every level
-    // minimum speed is set as 0.3 second / 1 drop
+    // speed increases by 50ms every level
+    // minimum speed is set as 0.1 second / 1 drop
     adjustSoftDropSpeed() {
         console.log("current speed: ");
         clearInterval(this.softDropTimer);
