@@ -1,6 +1,6 @@
 import React from 'react';
-import GameBoard from './GameBoard';
-import ScoreBoard from './ScoreBoard';
+import GameBoard from './GameBoard/GameBoard';
+import ScoreBoard from './ScoreBoard/ScoreBoard';
 import './game.css';
 
 class Game extends React.Component {
@@ -16,17 +16,11 @@ class Game extends React.Component {
             }
         }
 
-        /** 
-         * Q. Why would this be any different from above? This doesn't work.. 
-         * const gameBoard = new Array(40).fill(
-         * new Array(10).fill(
-         * { filled: false, color: "#2C2726", active: false, pivot: false }
-         * )
-         * ); */
-
         this.state = {
             time: 0,
             score: 0,
+            totalLinesCleared: 0, // level is 1 + [totalLinesCleared] // 10
+            combo: 0,
             isAlive: true,
             isPaused: false,
             gameBoard: gameBoard,
@@ -83,20 +77,14 @@ class Game extends React.Component {
 
 
     componentDidMount() {
-        this.timerID = setInterval(() => {
-            this.setState({
-                time: this.state.time + 1
-            })
-        }, 1000);
         this.releaseNextTetromino();
-        this.timerID2 = setInterval(this.drop, 1000);
+        this.softDropTimer = setInterval(this.drop, 1000);
         document.addEventListener("keydown", this.handleKeyboardInput, false);
     }
 
 
     componentWillUnmount() {
-        clearInterval(this.timerID);
-        clearInterval(this.timerID2);
+        clearInterval(this.softDropTimer);
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
@@ -139,12 +127,13 @@ class Game extends React.Component {
         let canDrop = true;
         let active = this.state.active;
         let board = this.state.gameBoard;
+        active.sort((a, b) => { return a['row'] - b['row'] });
         for (let pos of active) {
             const row = pos['row'];
             const col = pos['col'];
             if (row === 39 ||
                 (!board[row + 1][col]['active'] && board[row + 1][col]['filled'])) {
-                // turn this collection of blocks to inactive,
+                // turn this collection of blocks (and this collection ONLY) to inactive,
                 for (let pos of active) {
                     board[pos['row']][pos['col']]['active'] = false
                 }
@@ -346,8 +335,9 @@ class Game extends React.Component {
         }
 
         // fill the top 
-        const numClearedRow = 40 - newBoard.length;
-        for (let r = 0; r < numClearedRow; r++) {
+        const remainingRows = 40 - newBoard.length;
+        const numClearedRow = 20 - newBoard.length
+        for (let r = 0; r < remainingRows; r++) {
             let row = [];
             for (let c = 0; c < 10; c++) {
                 row.push({ filled: false, color: "#2C2726", active: false, pivot: false });
@@ -355,10 +345,33 @@ class Game extends React.Component {
             newBoard.unshift(row);
         }
 
+        const level = this.getLevel();
+        let scoreIncrement;
+        switch (numClearedRow) {
+            case 0:
+                scoreIncrement = 0;
+                break;
+            case 1:
+                scoreIncrement = 100 * level + 50 * this.state.combo * level;
+                break;
+            case 2:
+                scoreIncrement = 300 * level + 50 * this.state.combo * level;
+                break;
+            case 3:
+                scoreIncrement = 500 * level + 50 * this.state.combo * level;
+                break;
+            case 4:
+                scoreIncrement = 800 * level + 50 * this.state.combo * level;
+                break;
+        }
+        const newCombo = numClearedRow > 0 ? this.state.combo + 1 : 0;
+
         this.setState({
             gameBoard: newBoard,
-            score: this.state.score + numClearedRow - 20,
-        });
+            totalLinesCleared: this.state.totalLinesCleared + numClearedRow,
+            combo: newCombo,
+            score: this.state.score + scoreIncrement,
+        }, this.adjustSoftDropSpeed());
 
     }
 
@@ -374,7 +387,6 @@ class Game extends React.Component {
     }
 
     handleSpaceInput(ghostPieceSet) {
-        // event.preventDefault();
         const board = this.currActiveToInactive(this.state.gameBoard);
         const blockColor = this.tetrominoTypeToColor(this.state.activeBlockType);
 
@@ -391,25 +403,18 @@ class Game extends React.Component {
             gameBoard: board,
             active: newActive
         }, () => {
-            clearInterval(this.timerID2);
+            clearInterval(this.softDropTimer);
             this.drop();
-            this.timerID2 = setInterval(this.drop, 1000);
         });
     }
 
     pauseOrResume() {
         const isPaused = this.state.isPaused;
         if (isPaused) {
-            this.timerID = setInterval(() => {
-                this.setState({
-                    time: this.state.time + 1
-                })
-            }, 1000);
-            this.timerID2 = setInterval(this.drop, 1000);
+            this.adjustSoftDropSpeed();
         }
         else {
-            clearInterval(this.timerID);
-            clearInterval(this.timerID2);
+            clearInterval(this.softDropTimer);
         }
         this.setState({
             isPaused: !isPaused
@@ -541,6 +546,20 @@ class Game extends React.Component {
         return board;
     }
 
+    getLevel() {
+        return 1 + Math.floor(this.state.totalLinesCleared / 10);
+    }
+
+    // speed increases by 50ms every level
+    // minimum speed is set as 0.1 second / 1 drop
+    adjustSoftDropSpeed() {
+        console.log("current speed: ");
+        clearInterval(this.softDropTimer);
+        const newSpeed = Math.max(100, 1050 - (50 * this.getLevel()));
+        console.log(newSpeed);
+        this.softDropTimer = setInterval(this.drop, newSpeed);
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -551,8 +570,8 @@ class Game extends React.Component {
                     isPaused={this.state.isPaused}
                 />
                 <ScoreBoard
-                    // nextTetromino={this.props.nextTetromino}
                     time={this.state.time}
+                    level={this.getLevel()}
                     score={this.state.score}
                     nextTetColor={this.tetrominoTypeToColor(this.state.nextTetType)}
                     nextTetPos={this.tetrominoTypeToNextPos(this.state.nextTetType)}
