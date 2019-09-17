@@ -22,7 +22,7 @@ class Tetris extends React.Component {
     }
 
     callGetLeadersAPI() {
-        fetch("http://localhost:9000/leaders")
+        fetch("http://52.36.201.58:9000/leaders")
             .then(res => res.json())
             .then(data => this.setState({
                 leaders: data
@@ -63,7 +63,7 @@ class Tetris extends React.Component {
 
     handleGameOver(score) {
         console.log('game over');
-        fetch('http://localhost:9000/newScore', {
+        fetch('http://52.36.201.58:9000/newScore', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
