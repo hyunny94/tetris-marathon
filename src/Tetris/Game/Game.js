@@ -380,6 +380,7 @@ class Game extends React.Component {
         for (let r = 18; r < 20; r++) {
             for (let c = 3; c < 7; c++) {
                 if (board[r][c]['filled']) {
+                    clearInterval(this.softDropTimer);
                     return this.props.handleGameOver(this.state.score);
                 }
             }
@@ -562,7 +563,7 @@ class Game extends React.Component {
 
     render() {
         return (
-            <React.Fragment>
+            <div className="container">
                 <GameBoard
                     gameBoard={this.state.gameBoard}
                     active={this.state.active}
@@ -578,7 +579,7 @@ class Game extends React.Component {
                     heldTetColor={this.tetrominoTypeToColor(this.state.heldBlock)}
                     heldTetPos={this.tetrominoTypeToNextPos(this.state.heldBlock)}
                 />
-            </React.Fragment>
+            </div>
         );
     }
 

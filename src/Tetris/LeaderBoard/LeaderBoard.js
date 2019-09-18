@@ -10,7 +10,7 @@ function LeaderBoard(props) {
     });
 
     return (
-        <div className="leaderBoard">
+        <div className="leaderboard-container">
             <h1> Leader Board </h1>
             <table>
                 <thead>

@@ -20,9 +20,8 @@ function BlockRow(props) {
         });
     }
 
-    const className = props.text === "Next" ? "nextTetBoardContainer" : "heldTetBoardContainer";
     return (
-        <div className={className}>
+        <div className="blockRow">
             <h1>{props.text}:</h1>
             <div className="tetBoard">
                 {nextTet}

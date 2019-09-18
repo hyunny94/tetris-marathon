@@ -1,43 +1,41 @@
+.container {
+    display: flex;
+    width: 800px;
+    height: 850px;
+    margin: auto;
+}
+
 .gameBoard {
     background-color: #2C2726;
-    width: 320px;
-    height: 700px;
-    position: absolute;
-    top: 10%;
-    left: 25%;
+    width: 320px;  /* Or whatever */
+    height: 700px; /* Or whatever */
+    margin: auto;  /* Magic! */
 }
 
 .scoreBoard {
-    position: absolute;
-    top: 10%;
-    left: 60%;
+    width: 320px;  /* Or whatever */
+    height: 700px; /* Or whatever */
+    margin: auto;  /* Magic! */
 }
 
-.nextTetBoardContainer {
+.regularRow {
     width: 200px;
-    height: 200px;
-    position: absolute;
-    top: 80%;
-    left: 00%;
+    height: 100px;
+    margin: auto;
 }
 
-.heldTetBoardContainer {
+.blockRow {
     width: 200px;
     height: 200px;
-    position: absolute;
-    top: 200%;
-    left: 00%;
+    margin: auto;
 }
 
 .tetBoard {
     background-color: #2C2726;
     width: 128px;
     height: 130px;
-    position: absolute;
-    top: 10%;
-    left: 50%;
+    margin: auto;
 }
-
 .block {
     width: 30px;
     height: 30px;
