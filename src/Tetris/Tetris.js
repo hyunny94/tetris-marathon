@@ -4,6 +4,7 @@ import LeaderBoard from './LeaderBoard/LeaderBoard';
 import Register from './Register/Register';
 import Help from './Help/Help';
 
+
 class Tetris extends React.Component {
 
     constructor(props) {
@@ -22,7 +23,9 @@ class Tetris extends React.Component {
     }
 
     callGetLeadersAPI() {
-        fetch("https://ec2-54-185-195-242.us-west-2.compute.amazonaws.com:9000/leaders")
+        console.log("calling the following endpoint:");
+        console.log(process.env.REACT_APP_SERVER_HOST + "/leaders");
+        fetch(process.env.REACT_APP_SERVER_HOST + "/leaders")
             .then(res => res.json())
             .then(data => this.setState({
                 leaders: data
@@ -63,7 +66,7 @@ class Tetris extends React.Component {
 
     handleGameOver(score) {
         console.log('game over');
-        fetch('https://ec2-54-185-195-242.us-west-2.compute.amazonaws.com:9000/newScore', {
+        fetch(process.env.REACT_APP_SERVER_HOST + '/newScore', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
