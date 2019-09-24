@@ -26,8 +26,8 @@ class Tetris extends React.Component {
         console.log("calling the following endpoint:");
         // console.log(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks");
         // fetch(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks")
-        console.log('https://52.13.130.5' + "/api/v1/ranks");
-        fetch('https://52.13.130.5' + "/api/v1/ranks", {
+        console.log('https://kyotris.com' + "/api/v1/ranks");
+        fetch('https://kyotris.com' + "/api/v1/ranks", {
             headers: {
                 'Origin': 'https://master.d1eay1f6v0z5km.amplifyapp.com',
             },
@@ -73,7 +73,7 @@ class Tetris extends React.Component {
     handleGameOver(score) {
         console.log('game over');
         // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
-        fetch('https://52.13.130.5' + '/api/v1/ranks', {
+        fetch('https://kyotris.com' + '/api/v1/ranks', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
             // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
