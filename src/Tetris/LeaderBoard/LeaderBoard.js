@@ -6,7 +6,7 @@ import './leaderBoard.css';
 function LeaderBoard(props) {
 
     const leaders = props.leaders.map((leader, index) => {
-        return <Leader leader={leader} key={index} />
+        return <Leader rank={index + 1} leader={leader} key={index} />
     });
 
     return (
@@ -15,6 +15,7 @@ function LeaderBoard(props) {
             <table>
                 <thead>
                     <tr>
+                        <td>Rank</td>
                         <td>Name</td>
                         <td>Score</td>
                     </tr>
