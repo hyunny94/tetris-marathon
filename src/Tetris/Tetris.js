@@ -24,8 +24,10 @@ class Tetris extends React.Component {
 
     callGetLeadersAPI() {
         console.log("calling the following endpoint:");
-        console.log(process.env.REACT_APP_SERVER_HOST + "/leaders");
-        fetch(process.env.REACT_APP_SERVER_HOST + "/leaders")
+        // console.log(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks");
+        // fetch(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks")
+        console.log('https://kyotris.com' + "/api/v1/ranks");
+        fetch('https://kyotris.com' + "/api/v1/ranks")
             .then(res => res.json())
             .then(data => this.setState({
                 leaders: data
@@ -66,7 +68,8 @@ class Tetris extends React.Component {
 
     handleGameOver(score) {
         console.log('game over');
-        fetch(process.env.REACT_APP_SERVER_HOST + '/newScore', {
+        // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
+        fetch('https://kyotris.com' + '/api/v1/ranks', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached

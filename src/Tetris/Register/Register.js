@@ -8,7 +8,7 @@ function Register(props) {
                 <input type="text" name="nickname" onChange={props.handleNameChange} />
             </label>
 
-            <button onClick={props.handleRegister}> Register </button>
+            <button onClick={props.handleRegister}> Play </button>
         </form>
     );
 }
