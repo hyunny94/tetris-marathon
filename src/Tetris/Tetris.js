@@ -27,7 +27,11 @@ class Tetris extends React.Component {
         // console.log(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks");
         // fetch(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks")
         console.log('https://kyotris.com' + "/api/v1/ranks");
-        fetch('https://kyotris.com' + "/api/v1/ranks")
+        fetch('https://kyotris.com' + "/api/v1/ranks", {
+            headers: {
+                'Origin': 'https://master.d1eay1f6v0z5km.amplifyapp.com',
+            },
+        })
             .then(res => res.json())
             .then(data => this.setState({
                 leaders: data
@@ -77,6 +81,7 @@ class Tetris extends React.Component {
             headers: {
                 'Content-Type': 'application/json',
                 // 'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': 'https://master.d1eay1f6v0z5km.amplifyapp.com',
             },
             redirect: 'follow', // manual, *follow, error
             referrer: 'no-referrer', // no-referrer, *client
