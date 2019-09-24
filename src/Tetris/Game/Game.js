@@ -142,7 +142,7 @@ class Game extends React.Component {
             }
         }
 
-        if (!canDrop) {
+        if (this.state.isAlive && !canDrop) {
             console.log("cannot drop no more");
             this.checkGameOver();
             this.clearRows();
@@ -381,6 +381,9 @@ class Game extends React.Component {
             for (let c = 3; c < 7; c++) {
                 if (board[r][c]['filled']) {
                     clearInterval(this.softDropTimer);
+                    this.setState({
+                        isAlive: false,
+                    })
                     return this.props.handleGameOver(this.state.score);
                 }
             }
