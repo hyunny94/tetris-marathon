@@ -29,7 +29,7 @@ class Tetris extends React.Component {
         console.log('https://kyotris.com' + "/api/v1/ranks");
         fetch('https://kyotris.com' + "/api/v1/ranks", {
             headers: {
-                'Origin': 'https://kyothrees.com',
+                'Origin': 'https://www.kyothrees.com',
             },
         })
             .then(res => res.json())
@@ -81,7 +81,7 @@ class Tetris extends React.Component {
             headers: {
                 'Content-Type': 'application/json',
                 // 'Content-Type': 'application/x-www-form-urlencoded',
-                'Origin': 'https://kyothrees.com',
+                'Origin': 'https://www.kyothrees.com',
             },
             redirect: 'follow', // manual, *follow, error
             referrer: 'no-referrer', // no-referrer, *client
