@@ -23,10 +23,6 @@ class Tetris extends React.Component {
     }
 
     callGetLeadersAPI() {
-        console.log("calling the following endpoint:");
-        // console.log(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks");
-        // fetch(process.env.REACT_APP_SERVER_HOST + "/api/v1/ranks")
-        console.log('https://kyotris.com' + "/api/v1/ranks");
         fetch('https://kyotris.com' + "/api/v1/ranks", {
             headers: {
                 'Origin': 'https://www.kyothrees.com',
@@ -43,7 +39,6 @@ class Tetris extends React.Component {
     }
 
     handleInitialGameStart() {
-        console.log("initial game start!");
         this.setState({
             gameState: 1
         });
@@ -57,21 +52,18 @@ class Tetris extends React.Component {
     }
 
     handleRegister() {
-        console.log('a new user has registered!');
         this.setState({
             gameState: 2,
         });
     }
 
     handleGameStart() {
-        console.log('a game has started');
         this.setState({
             gameState: 3
         });
     }
 
     handleGameOver(score) {
-        console.log('game over');
         // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
         fetch('https://kyotris.com' + '/api/v1/ranks', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -88,7 +80,6 @@ class Tetris extends React.Component {
             body: JSON.stringify({ name: this.state.name, score: score }), // body data type must match "Content-Type" header
         })
             .then(data => {
-                console.log(data);
                 this.callGetLeadersAPI();
                 this.setState({
                     gameState: 0

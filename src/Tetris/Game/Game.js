@@ -17,7 +17,6 @@ class Game extends React.Component {
         }
 
         this.state = {
-            time: 0,
             score: 0,
             totalLinesCleared: 0, // level is 1 + [totalLinesCleared] // 10
             combo: 0,
@@ -47,27 +46,27 @@ class Game extends React.Component {
         event.preventDefault();
         switch (event.keyCode) {
             case 16: // "shift" for holding a piece OR exchanging with held piece
-                console.log("hold or exchange");
+                // console.log("hold or exchange");
                 !this.state.isPaused && this.holdOrExchange();
                 break;
             case 37: // left arrow
-                console.log("left");
+                // console.log("left");
                 !this.state.isPaused && this.moveLeftRight("left");
                 break;
             case 38: // up arrow
-                console.log("up");
+                // console.log("up");
                 !this.state.isPaused && this.rotate();
                 break;
             case 39: // right arrow
-                console.log("right");
+                // console.log("right");
                 !this.state.isPaused && this.moveLeftRight("right");
                 break;
             case 40: // down arrow
-                console.log("down");
+                // console.log("down");
                 !this.state.isPaused && this.drop();
                 break;
             case 80: // "p" for pausing OR resuming the game
-                console.log("pause or resume");
+                // console.log("pause or resume");
                 this.pauseOrResume();
                 break;
             default:
@@ -90,7 +89,6 @@ class Game extends React.Component {
 
 
     releaseNextTetromino() {
-        console.log("releaseNextTetromino");
         this.setState((state, props) => {
             const nextTetromino = state.nextTetType;
             const nextnextTet = Math.floor(Math.random() * 7);
@@ -143,7 +141,6 @@ class Game extends React.Component {
         }
 
         if (this.state.isAlive && !canDrop) {
-            console.log("cannot drop no more");
             this.checkGameOver();
             this.clearRows();
             this.releaseNextTetromino();
@@ -192,10 +189,7 @@ class Game extends React.Component {
         }
 
         // move or not
-        if (!canMove) {
-            console.log("cannot move " + dir);
-
-        } else {
+        if (canMove) {
             // All positions clear. the block can move down. 
             if (dir === "left") {
                 active.sort((a, b) => { return a['col'] - b['col'] }); // sort the active block positions w.r.t the column number in ASCENDING order.    
@@ -214,7 +208,7 @@ class Game extends React.Component {
                 active: active.map((e) => {
                     e['col'] = e['col'] + dir_int; return e;
                 })
-            });
+            }, this.adjustSoftDropSpeed());
         }
     }
 
@@ -281,11 +275,47 @@ class Game extends React.Component {
 
         let next_pos = next_pos_dict[blockType][blockOrientation];
 
-        // 1. if any of the new positions after the rotation is filled.
+        // get new positions
+        let new_active = []
         for (let pos of next_pos) {
             let row = pivot['row'] + pos['row'];
             let col = pivot['col'] + pos['col'];
-            if (row > 39 || col < 0 || col > 9 || (!board[row][col]['active'] && board[row][col]['filled'])) {
+            new_active.push({ row: row, col: col, pivot: pos['pivot'] });
+        }
+
+        //0. check for wall kick 
+        var wallKickRow = 0;
+        var wallKickColLeft = 0;
+        var wallKickColRight = 0;
+        for (let pos of new_active) {
+            let row = pos['row'];
+            let col = pos['col'];
+            if (row > 39) {
+                wallKickRow = Math.max(wallKickRow, row - 39);
+            }
+            if (col < 0) {
+                wallKickColLeft = Math.max(wallKickColLeft, -col);
+            }
+            else if (col > 9) {
+                wallKickColRight = Math.max(wallKickColRight, col - 9);
+            }
+        }
+
+        if (wallKickRow || wallKickColLeft || wallKickColRight) {
+            new_active.forEach((curr, i, arr) => {
+                arr[i] = {
+                    row: curr['row'] - wallKickRow,
+                    col: curr['col'] + wallKickColLeft - wallKickColRight,
+                    pivot: curr['pivot']
+                };
+            });
+        }
+
+        //1. if any of the new positions after the rotation is filled.
+        for (let pos of new_active) {
+            let row = pos['row'];
+            let col = pos['col'];
+            if (!board[row][col]['active'] && board[row][col]['filled']) {
                 return;
             }
         }
@@ -295,12 +325,9 @@ class Game extends React.Component {
         board = this.currActiveToInactive(board);
 
         // new positions => active
-        let new_active = []
-        for (let pos of next_pos) {
-            let row = pivot['row'] + pos['row'];
-            let col = pivot['col'] + pos['col'];
-
-            new_active.push({ row: row, col: col, pivot: pos['pivot'] });
+        for (let pos of new_active) {
+            let row = pos['row'];
+            let col = pos['col'];
             board[row][col] = { filled: true, color: color, active: true, pivot: pos['pivot'] };
         }
 
@@ -310,7 +337,7 @@ class Game extends React.Component {
             gameBoard: board,
             active: new_active,
             activeBlockOrientation: nextOrientation,
-        });
+        }, this.adjustSoftDropSpeed());
     }
 
     clearRows() {
@@ -365,6 +392,8 @@ class Game extends React.Component {
                 break;
         }
         const newCombo = numClearedRow > 0 ? this.state.combo + 1 : 0;
+
+
 
         this.setState({
             gameBoard: newBoard,
@@ -428,8 +457,6 @@ class Game extends React.Component {
     holdOrExchange() {
         if (!this.state.holdUsed) {
             const heldBlock = this.state.heldBlock;
-            console.log("curr held block is");
-            console.log(heldBlock);
             // Exchange
             // make current active to inactive 
             let board = this.currActiveToInactive(this.state.gameBoard);
@@ -515,9 +542,9 @@ class Game extends React.Component {
             case 0: // T
                 return "#C608F4";
             case 1: // J
-                return "#134EEA";
-            case 2: // L
                 return "#EFC30E";
+            case 2: // L
+                return "#134EEA";
             case 3: // I 
                 return "cyan";
             case 4: // O
@@ -556,11 +583,10 @@ class Game extends React.Component {
 
     // speed increases by 50ms every level
     // minimum speed is set as 0.1 second / 1 drop
+    // this function clears and resets the timer for drop(). => so it is used to locks 
     adjustSoftDropSpeed() {
-        console.log("current speed: ");
         clearInterval(this.softDropTimer);
         const newSpeed = Math.max(100, 1050 - (50 * this.getLevel()));
-        console.log(newSpeed);
         this.softDropTimer = setInterval(this.drop, newSpeed);
     }
 
@@ -574,7 +600,6 @@ class Game extends React.Component {
                     isPaused={this.state.isPaused}
                 />
                 <ScoreBoard
-                    time={this.state.time}
                     level={this.getLevel()}
                     score={this.state.score}
                     nextTetColor={this.tetrominoTypeToColor(this.state.nextTetType)}
