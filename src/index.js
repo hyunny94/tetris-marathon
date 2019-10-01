@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import Tetris from './Tetris/Tetris';
 import * as serviceWorker from './serviceWorker';
 
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 ReactDOM.render(<Tetris />, document.getElementById('root'));
 

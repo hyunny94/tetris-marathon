@@ -1,8 +1,7 @@
 import React from 'react';
 import Game from './Game/Game';
-import LeaderBoard from './LeaderBoard/LeaderBoard';
 import Register from './Register/Register';
-import Help from './Help/Help';
+import Homepage from './Homepage/Homepage';
 
 
 class Tetris extends React.Component {
@@ -17,7 +16,6 @@ class Tetris extends React.Component {
         };
         this.handleInitialGameStart = this.handleInitialGameStart.bind(this);
         this.handleNameChange = this.handleNameChange.bind(this);
-        this.handleRegister = this.handleRegister.bind(this);
         this.handleGameStart = this.handleGameStart.bind(this);
         this.handleGameOver = this.handleGameOver.bind(this);
     }
@@ -51,15 +49,9 @@ class Tetris extends React.Component {
         });
     }
 
-    handleRegister() {
-        this.setState({
-            gameState: 2,
-        });
-    }
-
     handleGameStart() {
         this.setState({
-            gameState: 3
+            gameState: 2
         });
     }
 
@@ -97,15 +89,12 @@ class Tetris extends React.Component {
         let screen;
         switch (this.state.gameState) {
             case 0:
-                screen = <LeaderBoard leaders={this.state.leaders} handleInitialGameStart={this.handleInitialGameStart} />
+                screen = <Homepage leaders={this.state.leaders} handleInitialGameStart={this.handleInitialGameStart} />
                 break;
             case 1:
-                screen = <Register handleNameChange={this.handleNameChange} handleRegister={this.handleRegister} />
+                screen = <Register handleNameChange={this.handleNameChange} handleGameStart={this.handleGameStart} />
                 break;
             case 2:
-                screen = <Help handleGameStart={this.handleGameStart} />
-                break;
-            case 3:
                 screen = <Game handleGameOver={this.handleGameOver} />;
                 break;
             default:
