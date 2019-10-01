@@ -29,13 +29,13 @@ function Homepage(props) {
 
     return (
         <Container style={{ display: "block" }}>
-            <Row style={{ textAlign: "center" }}> {/** row1: intro */}
+            <Row style={{ textAlign: "center", marginBottom: 50 }}> {/** row1: intro */}
                 <Col>
                     <h1> Kyothrees </h1>
                     <p> Thank you for visiting this website and playing a game of Kyothrees. </p>
                 </Col>
             </Row>
-            <Row> {/** row2: leaderboard, updates, form */}
+            <Row style={{ marginBottom: 50 }}> {/** row2: leaderboard, updates, form */}
                 <Col>
                     <h1> Leader Board </h1>
                     <table>
@@ -65,7 +65,7 @@ function Homepage(props) {
                 </Col>
             </Row>
 
-            <Row style={{ textAlign: "center" }}> {/** Play button */}
+            <Row style={{ textAlign: "center", marginBottom: 50 }}> {/** Play button */}
                 <Col>
                     <ChallengeButton handleGameStart={props.handleInitialGameStart} />
                 </Col>

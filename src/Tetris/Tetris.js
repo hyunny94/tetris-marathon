@@ -30,6 +30,21 @@ class Tetris extends React.Component {
             .then(data => this.setState({
                 leaders: data
             }))
+            .catch(error => {
+                console.error(error);
+                this.setState({
+                    leaders: [{ name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 },
+                    { name: "dummy", score: 100 }]
+                })
+            });
     }
 
     componentDidMount() {
