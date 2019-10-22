@@ -2,6 +2,22 @@ import React from 'react';
 import GameBoard from './GameBoard/GameBoard';
 import ScoreBoard from './ScoreBoard/ScoreBoard';
 import './game.css';
+import UIfx from 'uifx';
+import doAudio from '../sounds/do.wav';
+import reAudio from '../sounds/re.wav';
+import miAudio from '../sounds/mi.wav';
+import faAudio from '../sounds/fa.wav';
+import solAudio from '../sounds/sol.wav';
+import laAudio from '../sounds/la.wav';
+import dropAudio from '../sounds/drop.mp3';
+const doSound = new UIfx(doAudio);
+const reSound = new UIfx(reAudio)
+const miSound = new UIfx(miAudio)
+const faSound = new UIfx(faAudio)
+const solSound = new UIfx(solAudio)
+const laSound = new UIfx(laAudio)
+const dropSound = new UIfx(dropAudio)
+
 
 class Game extends React.Component {
     constructor(props) {
@@ -19,7 +35,7 @@ class Game extends React.Component {
         this.state = {
             score: 0,
             totalLinesCleared: 0, // level is 1 + [totalLinesCleared] // 10
-            combo: 0,
+            combo: -1,
             isAlive: true,
             isPaused: false,
             gameBoard: gameBoard,
@@ -33,7 +49,9 @@ class Game extends React.Component {
             activeBlockOrientation: 0,
             heldBlock: null,
             holdUsed: false,
-            nextTetType: Math.floor(Math.random() * 7)
+            nextTetType: Math.floor(Math.random() * 7),
+            hardDrop: false,
+            prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
         };
 
         this.drop = this.drop.bind(this);
@@ -142,10 +160,12 @@ class Game extends React.Component {
 
         if (this.state.isAlive && !canDrop) {
             this.checkGameOver();
-            this.clearRows();
+            const scoreIncrement = this.clearRows();
             this.releaseNextTetromino();
             this.setState({
                 holdUsed: false,
+                score: this.state.hardDrop ? scoreIncrement + this.state.score + 8 : scoreIncrement + this.state.score + 4,
+                hardDrop: false
             })
         } else {
             // All positions clear. the block can move down. 
@@ -374,34 +394,39 @@ class Game extends React.Component {
 
         const level = this.getLevel();
         let scoreIncrement;
+        const newCombo = numClearedRow > 0 ? this.state.combo + 1 : -1;
+        const comboScore = newCombo >= 1 ? 50 * newCombo * level : 0;
+        const newPrevMoveDifficult = numClearedRow == 4 ? true : false
         switch (numClearedRow) {
             case 0:
                 scoreIncrement = 0;
                 break;
             case 1:
-                scoreIncrement = 100 * level + 50 * this.state.combo * level;
+                this.makeComboSound(newCombo)
+                scoreIncrement = 100 * level + comboScore;
                 break;
             case 2:
-                scoreIncrement = 300 * level + 50 * this.state.combo * level;
+                this.makeComboSound(newCombo)
+                scoreIncrement = 300 * level + comboScore;
                 break;
             case 3:
-                scoreIncrement = 500 * level + 50 * this.state.combo * level;
+                this.makeComboSound(newCombo)
+                scoreIncrement = 500 * level + comboScore;
                 break;
             case 4:
-                scoreIncrement = 800 * level + 50 * this.state.combo * level;
+                this.makeComboSound(newCombo)
+                scoreIncrement = this.state.prevMoveDifficult ? 1200 * level + comboScore : 800 * level + comboScore;
                 break;
         }
-        const newCombo = numClearedRow > 0 ? this.state.combo + 1 : 0;
-
-
 
         this.setState({
             gameBoard: newBoard,
             totalLinesCleared: this.state.totalLinesCleared + numClearedRow,
             combo: newCombo,
-            score: this.state.score + scoreIncrement,
+            prevMoveDifficult: newPrevMoveDifficult,
         }, this.adjustSoftDropSpeed());
 
+        return scoreIncrement;
     }
 
     checkGameOver() {
@@ -432,9 +457,13 @@ class Game extends React.Component {
             newActive.push({ row: row, col: col, pivot: false });
         })
 
+        // make drop sound
+        dropSound.play()
+
         this.setState({
             gameBoard: board,
-            active: newActive
+            active: newActive,
+            hardDrop: true,
         }, () => {
             clearInterval(this.softDropTimer);
             this.drop();
@@ -589,6 +618,35 @@ class Game extends React.Component {
         const newSpeed = Math.max(100, 1050 - (50 * this.getLevel()));
         this.softDropTimer = setInterval(this.drop, newSpeed);
     }
+
+
+    makeComboSound(combo) {
+        switch (combo) {
+            case -1:
+                break
+            case 0:
+                break
+            case 1:
+                doSound.play()
+                break
+            case 2:
+                reSound.play()
+                break
+            case 3:
+                miSound.play()
+                break
+            case 4:
+                faSound.play()
+                break
+            case 5:
+                solSound.play()
+                break
+            default: // more than 5 combos! 
+                laSound.play()
+                break
+        }
+    }
+
 
     render() {
         return (

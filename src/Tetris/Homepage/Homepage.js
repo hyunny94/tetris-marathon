@@ -53,6 +53,13 @@ function Homepage(props) {
                 </Col>
                 <Col> {/** updates */}
                     <h1> Updates to the game </h1>
+                    <h3> Oct 21 2019 </h3>
+                    <ul>
+                        <li>Scoring system has been improved. Now, soft drop is rewarded with 4 points, hard drop 8 points, and consecutive tetris (4 lines clear) are rewarded 1.5 times more. So the first tetris is rewarded with 800, but the second one with 1200. </li>
+                        <li>Sounds are being added. This update includes block drop and combo sounds. Please let me know if you have a mp3/wav file that can be used for a sound effect in the game. </li>
+                    </ul>
+
+                    <h3> Oct 1 2019 </h3>
                     <ul>
                         <li>wall-kicks (where blocks can rotate off the walls) are enabled.</li>
                         <li>lock delays (which allows you to rotate/move the block
