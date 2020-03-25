@@ -4446,7 +4446,7 @@ istanbul-reports@^2.2.6:
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/istanbul-reports/-/istanbul-reports-2.2.6.tgz#7b4f2660d82b29303a8fe6091f8ca4bf058da1af"
   dependencies:
-    handlebars "^4.1.2"
+    handlebars "^4.3.0"
 
 jest-changed-files@^24.9.0:
   version "24.9.0"
@@ -7935,7 +7935,7 @@ terser-webpack-plugin@1.4.1, terser-webpack-plugin@^1.4.1:
     find-cache-dir "^2.1.0"
     is-wsl "^1.1.0"
     schema-utils "^1.0.0"
-    serialize-javascript "^1.7.0"
+    serialize-javascript "^2.1.1"
     source-map "^0.6.1"
     terser "^4.1.2"
     webpack-sources "^1.4.0"

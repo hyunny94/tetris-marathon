@@ -2,7 +2,7 @@ import React from 'react';
 import Game from './Game/Game';
 import Register from './Register/Register';
 import Homepage from './Homepage/Homepage';
-
+import socketIOClient from "socket.io-client";
 
 class Tetris extends React.Component {
 
@@ -13,6 +13,7 @@ class Tetris extends React.Component {
             name: null,
             apiResponse: "",
             leaders: [],
+            socket: null,
         };
         this.handleInitialGameStart = this.handleInitialGameStart.bind(this);
         this.handleNameChange = this.handleNameChange.bind(this);
@@ -65,8 +66,19 @@ class Tetris extends React.Component {
     }
 
     handleGameStart() {
+        const socket = socketIOClient("127.0.0.1:9000");
         this.setState({
-            gameState: 2
+            socket: socket
+        });
+        socket.on("game start", _ => {
+            console.log("game start sign.")
+            this.setState({
+                gameState: 2
+            });
+        });
+        socket.on("opponent left", _ => {
+            console.log("opponent left sign.")
+            this.setState({gameState: 0})
         });
     }
 
@@ -110,7 +122,7 @@ class Tetris extends React.Component {
                 screen = <Register handleNameChange={this.handleNameChange} handleGameStart={this.handleGameStart} />
                 break;
             case 2:
-                screen = <Game handleGameOver={this.handleGameOver} />;
+                screen = <Game handleGameOver={this.handleGameOver} socket={this.state.socket}/>;
                 break;
             default:
                 break;

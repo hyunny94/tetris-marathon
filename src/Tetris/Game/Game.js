@@ -52,6 +52,7 @@ class Game extends React.Component {
             nextTetType: Math.floor(Math.random() * 7),
             hardDrop: false,
             prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
+            socket: this.props.socket
         };
 
         this.drop = this.drop.bind(this);
@@ -97,6 +98,14 @@ class Game extends React.Component {
         this.releaseNextTetromino();
         this.softDropTimer = setInterval(this.drop, 1000);
         document.addEventListener("keydown", this.handleKeyboardInput, false);
+        this.state.socket.on("pause", () => {
+            clearInterval(this.softDropTimer);
+            this.setState({isPaused: true});
+        })
+        this.state.socket.on("unpause", () => {
+            this.adjustSoftDropSpeed();
+            this.setState({isPaused: false});
+        })
     }
 
 
@@ -474,9 +483,11 @@ class Game extends React.Component {
         const isPaused = this.state.isPaused;
         if (isPaused) {
             this.adjustSoftDropSpeed();
+            this.state.socket.emit("unpause");
         }
         else {
             clearInterval(this.softDropTimer);
+            this.state.socket.emit("pause");
         }
         this.setState({
             isPaused: !isPaused
