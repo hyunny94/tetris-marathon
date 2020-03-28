@@ -53,7 +53,6 @@ class Game extends React.Component {
             hardDrop: false,
             prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
             socket: this.props.socket,
-            gameRoomName: this.props.gameRoomName,
             garbageLines: 0,
             softDropTimer: null
         };
