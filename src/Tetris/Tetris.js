@@ -14,6 +14,7 @@ class Tetris extends React.Component {
             apiResponse: "",
             leaders: [],
             socket: null,
+            gameRoomName: null
         };
         this.handleInitialGameStart = this.handleInitialGameStart.bind(this);
         this.handleNameChange = this.handleNameChange.bind(this);
@@ -70,20 +71,27 @@ class Tetris extends React.Component {
         this.setState({
             socket: socket
         });
-        socket.on("game start", _ => {
+        socket.on("game start", (gameRoomName) => {
             console.log("game start sign.")
             this.setState({
-                gameState: 2
+                gameState: 2,
+                gameRoomName: gameRoomName
             });
         });
         socket.on("opponent left", _ => {
             console.log("opponent left sign.")
-            this.setState({gameState: 0})
+            this.setState({
+                gameState: 0,
+                gameRoomName: null
+            })
         });
     }
 
     handleGameOver(score) {
-        // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
+        this.setState({
+            gameState: 0
+        }, () => {
+            // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
         fetch('https://kyotris.com' + '/api/v1/ranks', {
             method: 'POST', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, cors, *same-origin
@@ -100,16 +108,12 @@ class Tetris extends React.Component {
         })
             .then(data => {
                 this.callGetLeadersAPI();
-                this.setState({
-                    gameState: 0
-                })
             })
             .catch(error => {
                 console.error(error);
-                this.setState({
-                    gameState: 0
-                })
             });
+        })
+        
     }
 
     render() {
@@ -122,7 +126,7 @@ class Tetris extends React.Component {
                 screen = <Register handleNameChange={this.handleNameChange} handleGameStart={this.handleGameStart} />
                 break;
             case 2:
-                screen = <Game handleGameOver={this.handleGameOver} socket={this.state.socket}/>;
+                screen = <Game handleGameOver={this.handleGameOver} socket={this.state.socket} gameRoomName={this.state.gameRoomName}/>;
                 break;
             default:
                 break;

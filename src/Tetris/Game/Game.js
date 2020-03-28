@@ -52,7 +52,10 @@ class Game extends React.Component {
             nextTetType: Math.floor(Math.random() * 7),
             hardDrop: false,
             prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
-            socket: this.props.socket
+            socket: this.props.socket,
+            gameRoomName: this.props.gameRoomName,
+            garbageLines: 0,
+            softDropTimer: null
         };
 
         this.drop = this.drop.bind(this);
@@ -96,24 +99,42 @@ class Game extends React.Component {
 
     componentDidMount() {
         this.releaseNextTetromino();
-        this.softDropTimer = setInterval(this.drop, 1000);
+        let softDropTimer = setInterval(this.drop, 1000);
+        this.setState({softDropTimer});
         document.addEventListener("keydown", this.handleKeyboardInput, false);
         this.state.socket.on("pause", () => {
-            clearInterval(this.softDropTimer);
+            clearInterval(this.state.softDropTimer);
             this.setState({isPaused: true});
         })
         this.state.socket.on("unpause", () => {
             this.adjustSoftDropSpeed();
             this.setState({isPaused: false});
         })
+        this.state.socket.on("line cleared", (numLines) => {
+            this.setState({garbageLines: this.state.garbageLines + numLines})
+        })
     }
 
 
     componentWillUnmount() {
-        clearInterval(this.softDropTimer);
+        clearInterval(this.state.softDropTimer);
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
+    // receive garbage lines from the opponent
+    receiveLines() {
+        let newBoard = this.state.gameBoard;
+        for (var i =0; i < this.state.garbageLines; i++) {
+            let row = [];
+            for (let c = 0; c < 10; c++) {
+                row.push({ filled: true, color: "#808080", active: false, pivot: false });
+            }
+            newBoard.push(row);
+        }
+        this.setState({
+            gameBoard: newBoard.slice(this.state.garbageLines)
+        })
+    }
 
     releaseNextTetromino() {
         this.setState((state, props) => {
@@ -147,7 +168,6 @@ class Game extends React.Component {
         });
     }
 
-
     drop() {
         let canDrop = true;
         let active = this.state.active;
@@ -174,7 +194,8 @@ class Game extends React.Component {
             this.setState({
                 holdUsed: false,
                 score: this.state.hardDrop ? scoreIncrement + this.state.score + 8 : scoreIncrement + this.state.score + 4,
-                hardDrop: false
+                hardDrop: false,
+                garbageLines: 0
             })
         } else {
             // All positions clear. the block can move down. 
@@ -370,15 +391,26 @@ class Game extends React.Component {
     }
 
     clearRows() {
-        const board = this.state.gameBoard;
+        let board = this.state.gameBoard;
+        let garbageLines = this.state.garbageLines;
+
+        for (var i =0; i < garbageLines; i++) {
+            let row = [];
+            for (let c = 0; c < 10; c++) {
+                row.push({ filled: true, color: "#808080", active: false, pivot: false });
+            }
+            board.push(row);
+        }
+        board = board.slice(garbageLines)
 
         // only add non-full rows starting from the bottom 
         let newBoard = [];
         for (let r = board.length - 1; r >= 20; r--) {
             let filled = true;
             for (let c = 0; c < 10; c++) {
-                if (!board[r][c]['filled']) {
+                if (!board[r][c]['filled'] || board[r][c]['color'] == "#808080") {
                     filled = false;
+                    break;
                 }
             }
             if (!filled) {
@@ -405,7 +437,8 @@ class Game extends React.Component {
         let scoreIncrement;
         const newCombo = numClearedRow > 0 ? this.state.combo + 1 : -1;
         const comboScore = newCombo >= 1 ? 50 * newCombo * level : 0;
-        const newPrevMoveDifficult = numClearedRow == 4 ? true : false
+        const newPrevMoveDifficult = numClearedRow == 4 ? true : false;
+        var lineSentToOpponent = 0;
         switch (numClearedRow) {
             case 0:
                 scoreIncrement = 0;
@@ -417,15 +450,21 @@ class Game extends React.Component {
             case 2:
                 this.makeComboSound(newCombo)
                 scoreIncrement = 300 * level + comboScore;
+                lineSentToOpponent += 1;
                 break;
             case 3:
                 this.makeComboSound(newCombo)
                 scoreIncrement = 500 * level + comboScore;
+                lineSentToOpponent += 2;
                 break;
             case 4:
                 this.makeComboSound(newCombo)
                 scoreIncrement = this.state.prevMoveDifficult ? 1200 * level + comboScore : 800 * level + comboScore;
+                lineSentToOpponent = this.state.prevMoveDifficult ? lineSentToOpponent + 6 : lineSentToOpponent + 4;
                 break;
+        }
+        if (lineSentToOpponent != 0) {
+            this.state.socket.emit("line cleared", lineSentToOpponent);
         }
 
         this.setState({
@@ -439,11 +478,13 @@ class Game extends React.Component {
     }
 
     checkGameOver() {
+        console.log("checking game over");
         const board = this.state.gameBoard;
         for (let r = 18; r < 20; r++) {
             for (let c = 3; c < 7; c++) {
                 if (board[r][c]['filled']) {
-                    clearInterval(this.softDropTimer);
+                    console.log("game over!");
+                    clearInterval(this.state.softDropTimer);
                     this.setState({
                         isAlive: false,
                     })
@@ -474,7 +515,7 @@ class Game extends React.Component {
             active: newActive,
             hardDrop: true,
         }, () => {
-            clearInterval(this.softDropTimer);
+            clearInterval(this.state.softDropTimer);
             this.drop();
         });
     }
@@ -486,7 +527,7 @@ class Game extends React.Component {
             this.state.socket.emit("unpause");
         }
         else {
-            clearInterval(this.softDropTimer);
+            clearInterval(this.state.softDropTimer);
             this.state.socket.emit("pause");
         }
         this.setState({
@@ -625,9 +666,10 @@ class Game extends React.Component {
     // minimum speed is set as 0.1 second / 1 drop
     // this function clears and resets the timer for drop(). => so it is used to locks 
     adjustSoftDropSpeed() {
-        clearInterval(this.softDropTimer);
+        clearInterval(this.state.softDropTimer);
         const newSpeed = Math.max(100, 1050 - (50 * this.getLevel()));
-        this.softDropTimer = setInterval(this.drop, newSpeed);
+        let softDropTimer = setInterval(this.drop, newSpeed);
+        this.setState({softDropTimer});
     }
 
 
