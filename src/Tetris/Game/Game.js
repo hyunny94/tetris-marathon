@@ -22,6 +22,8 @@ const dropSound = new UIfx(dropAudio)
 class Game extends React.Component {
     constructor(props) {
         super(props);
+
+        // Draw an empty game board
         const gameBoard = [];
         for (let r = 0; r < 40; r++) {
             gameBoard.push([]);
@@ -120,6 +122,7 @@ class Game extends React.Component {
                     unavailable_row.add(pos['row']);
                 }
             });
+            // push up the new tetromino's position if its preset positions are already filled
             nextPos = nextPos.map((pos) => {
                 return { ...pos, row: pos['row'] - unavailable_row.size };
             })
@@ -147,8 +150,9 @@ class Game extends React.Component {
         for (let pos of active) {
             const row = pos['row'];
             const col = pos['col'];
-            if (row === 39 ||
-                (!board[row + 1][col]['active'] && board[row + 1][col]['filled'])) {
+            if (row === 39 || // current tet reached the ground
+                (!board[row + 1][col]['active'] && board[row + 1][col]['filled']) // current tet reached another inactive tet
+                ) {
                 // turn this collection of blocks (and this collection ONLY) to inactive,
                 for (let pos of active) {
                     board[pos['row']][pos['col']]['active'] = false
@@ -159,14 +163,20 @@ class Game extends React.Component {
         }
 
         if (this.state.isAlive && !canDrop) {
-            this.checkGameOver();
+            const gameOver = this.checkGameOver(); 
+            if (gameOver) {
+                return;
+            }
             const scoreIncrement = this.clearRows();
-            this.releaseNextTetromino();
             this.setState({
                 holdUsed: false,
                 score: this.state.hardDrop ? scoreIncrement + this.state.score + 8 : scoreIncrement + this.state.score + 4,
                 hardDrop: false
-            })
+            }, () => {
+                this.releaseNextTetromino();
+                this.adjustSoftDropSpeed(this.getCurrSpeed());
+            });
+            // TODO: don't like how this branch deals with isAlive and canDrop at the same time
         } else {
             // All positions clear. the block can move down. 
             // active ones => inactive
@@ -210,7 +220,7 @@ class Game extends React.Component {
 
         // move or not
         if (canMove) {
-            // All positions clear. the block can move down. 
+            // All positions clear. the block can move. 
             if (dir === "left") {
                 active.sort((a, b) => { return a['col'] - b['col'] }); // sort the active block positions w.r.t the column number in ASCENDING order.    
             }
@@ -228,7 +238,7 @@ class Game extends React.Component {
                 active: active.map((e) => {
                     e['col'] = e['col'] + dir_int; return e;
                 })
-            }, this.adjustSoftDropSpeed());
+            });
         }
     }
 
@@ -239,6 +249,7 @@ class Game extends React.Component {
         let blockType = this.state.activeBlockType;
         let blockOrientation = this.state.activeBlockOrientation;
 
+        // TODO: should probably be a constant 
         // rotation algorithm for each block type
         let next_pos_dict = {
             0: {
@@ -288,7 +299,7 @@ class Game extends React.Component {
         }
 
         // check if we can rotate
-        // 0. not the square one :)
+        // not the square one :)
         if (!pivot) {
             return;
         }
@@ -303,7 +314,7 @@ class Game extends React.Component {
             new_active.push({ row: row, col: col, pivot: pos['pivot'] });
         }
 
-        //0. check for wall kick 
+        // check for wall kick 
         var wallKickRow = 0;
         var wallKickColLeft = 0;
         var wallKickColRight = 0;
@@ -331,7 +342,7 @@ class Game extends React.Component {
             });
         }
 
-        //1. if any of the new positions after the rotation is filled.
+        // if any of the new positions after the rotation is filled, return
         for (let pos of new_active) {
             let row = pos['row'];
             let col = pos['col'];
@@ -357,7 +368,7 @@ class Game extends React.Component {
             gameBoard: board,
             active: new_active,
             activeBlockOrientation: nextOrientation,
-        }, this.adjustSoftDropSpeed());
+        });
     }
 
     clearRows() {
@@ -396,7 +407,7 @@ class Game extends React.Component {
         let scoreIncrement;
         const newCombo = numClearedRow > 0 ? this.state.combo + 1 : -1;
         const comboScore = newCombo >= 1 ? 50 * newCombo * level : 0;
-        const newPrevMoveDifficult = numClearedRow == 4 ? true : false
+        const newPrevMoveDifficult = numClearedRow === 4 ? true : false
         switch (numClearedRow) {
             case 0:
                 scoreIncrement = 0;
@@ -424,24 +435,26 @@ class Game extends React.Component {
             totalLinesCleared: this.state.totalLinesCleared + numClearedRow,
             combo: newCombo,
             prevMoveDifficult: newPrevMoveDifficult,
-        }, this.adjustSoftDropSpeed());
+        });
 
         return scoreIncrement;
     }
 
+    // Return true if game is over
     checkGameOver() {
         const board = this.state.gameBoard;
         for (let r = 18; r < 20; r++) {
             for (let c = 3; c < 7; c++) {
                 if (board[r][c]['filled']) {
-                    clearInterval(this.softDropTimer);
                     this.setState({
                         isAlive: false,
                     })
-                    return this.props.handleGameOver(this.state.score);
+                    this.props.handleGameOver(this.state.score);
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     handleSpaceInput(ghostPieceSet) {
@@ -465,7 +478,6 @@ class Game extends React.Component {
             active: newActive,
             hardDrop: true,
         }, () => {
-            clearInterval(this.softDropTimer);
             this.drop();
         });
     }
@@ -473,7 +485,7 @@ class Game extends React.Component {
     pauseOrResume() {
         const isPaused = this.state.isPaused;
         if (isPaused) {
-            this.adjustSoftDropSpeed();
+            this.softDropTimer = setInterval(this.drop, this.getCurrSpeed());
         }
         else {
             clearInterval(this.softDropTimer);
@@ -610,12 +622,15 @@ class Game extends React.Component {
         return 1 + Math.floor(this.state.totalLinesCleared / 10);
     }
 
-    // speed increases by 50ms every level
-    // minimum speed is set as 0.1 second / 1 drop
-    // this function clears and resets the timer for drop(). => so it is used to locks 
-    adjustSoftDropSpeed() {
+    // Return current speed of tetromino drop in ms. 
+    // Fastest rate is 1 line drop per 0.1 second.
+    // Speed increases by 50ms every level
+    getCurrSpeed() {
+        return Math.max(100, 1050 - (50 * this.getLevel()));
+    }
+
+    adjustSoftDropSpeed(newSpeed) {
         clearInterval(this.softDropTimer);
-        const newSpeed = Math.max(100, 1050 - (50 * this.getLevel()));
         this.softDropTimer = setInterval(this.drop, newSpeed);
     }
 

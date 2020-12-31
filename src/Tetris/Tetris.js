@@ -71,33 +71,36 @@ class Tetris extends React.Component {
     }
 
     handleGameOver(score) {
-        // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
-        fetch('https://kyotris.com' + '/api/v1/ranks', {
-            method: 'POST', // *GET, POST, PUT, DELETE, etc.
-            mode: 'cors', // no-cors, cors, *same-origin
-            // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            // credentials: 'same-origin', // include, *same-origin, omit
-            headers: {
-                'Content-Type': 'application/json',
-                // 'Content-Type': 'application/x-www-form-urlencoded',
-                'Origin': 'https://www.kyothrees.com',
-            },
-            redirect: 'follow', // manual, *follow, error
-            referrer: 'no-referrer', // no-referrer, *client
-            body: JSON.stringify({ name: this.state.name, score: score }), // body data type must match "Content-Type" header
+        this.setState({
+            gameState: 0
         })
-            .then(data => {
-                this.callGetLeadersAPI();
-                this.setState({
-                    gameState: 0
-                })
-            })
-            .catch(error => {
-                console.error(error);
-                this.setState({
-                    gameState: 0
-                })
-            });
+        // fetch(process.env.REACT_APP_SERVER_HOST + '/api/v1/ranks', {
+        // fetch('https://kyotris.com' + '/api/v1/ranks', {
+        //     method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        //     mode: 'cors', // no-cors, cors, *same-origin
+        //     // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        //     // credentials: 'same-origin', // include, *same-origin, omit
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         // 'Content-Type': 'application/x-www-form-urlencoded',
+        //         'Origin': 'https://www.kyothrees.com',
+        //     },
+        //     redirect: 'follow', // manual, *follow, error
+        //     referrer: 'no-referrer', // no-referrer, *client
+        //     body: JSON.stringify({ name: this.state.name, score: score }), // body data type must match "Content-Type" header
+        // })
+        //     .then(data => {
+        //         this.callGetLeadersAPI();
+        //         this.setState({
+        //             gameState: 0
+        //         })
+        //     })
+        //     .catch(error => {
+        //         console.error(error);
+        //         this.setState({
+        //             gameState: 0
+        //         })
+        //     });
     }
 
     render() {
