@@ -1,5 +1,5 @@
 import React from 'react';
-import Block from '../Block';
+import Block from './Block';
 
 function BlockRow(props) {
     const color = props.color;

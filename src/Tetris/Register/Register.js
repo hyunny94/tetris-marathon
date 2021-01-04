@@ -20,7 +20,9 @@ function Register(props) {
                 <h1>Hold: shift</h1>
                 <h1>Pause: p</h1>
 
-                <button onClick={props.handleGameStart}> Start </button>
+                <button onClick={props.handleTetrisMarathonStart}> Play Tetris Marathon </button>
+                <button onClick={props.playTetrisBattleWithSomeone}> Play Tetris Battle With Someone </button>
+                {/* <button onClick={props.handleGameStart}> Play Tetris Battle With A Friend </button> */}
             </div>
         </div>
     );

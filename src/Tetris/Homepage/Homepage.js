@@ -5,7 +5,6 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-
 /**
  * homepage has
  * - Kyothrees name and welcome remarks
@@ -21,7 +20,6 @@ import Col from "react-bootstrap/Col";
 
 
 function Homepage(props) {
-
 
     const leaders = props.leaders.map((leader, index) => {
         return <Leader rank={index + 1} leader={leader} key={index} />
@@ -80,7 +78,6 @@ function Homepage(props) {
             </Row>
         </Container>
     );
-
 }
 
 export default Homepage;

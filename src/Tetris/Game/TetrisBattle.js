@@ -1,6 +1,6 @@
 import React from 'react';
-import GameBoard from './GameBoard/GameBoard';
-import ScoreBoard from './ScoreBoard/ScoreBoard';
+import GameBoard from './Components/GameBoard';
+import ScoreBoard from './Components/ScoreBoard';
 import './game.css';
 import UIfx from 'uifx';
 import doAudio from '../sounds/do.wav';
@@ -18,8 +18,24 @@ const solSound = new UIfx(solAudio)
 const laSound = new UIfx(laAudio)
 const dropSound = new UIfx(dropAudio)
 
-
-class Game extends React.Component {
+/** Tetris Battle Game mode is playered by two players going against each other. 
+ *  The rule is described below.
+ *  - Winner is determined by these factors in order (KO, lines sent)
+ *  - If both the # of KOs and the lines sent are equal, it's a draw.
+ * 
+ *  TODO
+ *  Front-end
+ *  1. should display 2 boards (opponent's view as well)
+ *  2. should keep a count of KOs and lines sent to the opponent
+ *  3. should display remaining time starting from 2 minutes
+ *  4. 
+ *  Game-logic
+ *  1. when a tetromino reaches the ceiling, 
+ *     it should clear the board and count as a KO for the opponent.
+ *  2. certain line-clearing actions sends attacking lines to the opponent. 
+ *  3. 
+ * */ 
+class TetrisBattle extends React.Component {
     constructor(props) {
         super(props);
 
@@ -449,7 +465,6 @@ class Game extends React.Component {
                     this.setState({
                         isAlive: false,
                     })
-                    this.props.handleGameOver(this.state.score);
                     return true;
                 }
             }
@@ -686,4 +701,4 @@ class Game extends React.Component {
 
 }
 
-export default Game;
+export default TetrisBattle;
