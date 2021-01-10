@@ -158,7 +158,9 @@ class Tetris extends React.Component {
                             />
                 break;
             case 2:
-                screen = <TetrisMarathon handleTetrisMarathonOver={this.handleTetrisMarathonOver} />;
+                screen = <TetrisMarathon 
+                            handleTetrisMarathonOver={this.handleTetrisMarathonOver} 
+                            name={this.state.name} />;
                 break;
             case 3:
                 screen = <TetrisBattle />;

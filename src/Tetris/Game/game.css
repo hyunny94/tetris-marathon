@@ -1,47 +1,67 @@
-.container {
-    /* display: flex; */
-    width: 800px;
-    height: 850px;
-    margin: auto;
+/* outermost container for one player */
+.gameContainer {
+    position: relative;
+    top: 10px;
+    left: 10px;
+    display: block;
+    width: 1000px;
+    height: 900px;
 }
 
+/* inner container on top  */
+.topBoard {
+    display: inline-block;
+    width: 1000px;
+    height: 100px;
+}
+
+/* board on the left of the gameboard */
+.leftBoard {
+    display: inline-block;
+    width: 100px; 
+    height: 500px;
+    margin-left: 200px;
+    margin-right: 25px;
+    vertical-align: top;
+}
+
+/* main game board */
 .gameBoard {
+    display: inline-block;
     background-color: #2C2726;
-    width: 320px;  /* Or whatever */
-    height: 700px; /* Or whatever */
-    margin: auto;  /* Magic! */
+    width: 250px; 
+    height: 500px;
     line-height: 0;
 }
 
-.scoreBoard {
-    width: 320px;  /* Or whatever */
-    height: 700px; /* Or whatever */
-    margin: auto;  /* Magic! */
+/* board on the right of the gameboard */
+.rightBoard {
+    display: inline-block;
+    width: 100px; 
+    height: 500px;
+    margin-left: 25px;
+    vertical-align: top;
 }
 
-.regularRow {
-    width: 200px;
+.singleTetBoard {
+    display: inline-block;
+    width: 100px;
     height: 100px;
-    margin: auto;
-}
-
-.blockRow {
-    width: 200px;
-    height: 200px;
-    margin: auto;
-}
-
-.tetBoard {
     background-color: #2C2726;
-    width: 128px;
-    height: 130px;
-    margin: auto;
     line-height: 0;
 }
 
 .block {
-    width: 32px;
-    height: 35px;
-    border: 1px groove #574D4B;
     display: inline-block;
+    width: 25px;
+    height: 25px;
+    border: 1px groove #574D4B;
+}
+
+h3 {
+    text-align: center;
+}
+
+h4 {
+    text-align: center;
 }

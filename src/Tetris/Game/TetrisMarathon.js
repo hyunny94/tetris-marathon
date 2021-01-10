@@ -1,6 +1,6 @@
 import React from 'react';
 import GameBoard from './Components/GameBoard';
-import ScoreBoard from './Components/ScoreBoard';
+import SingleTetBoard from './Components/SingleTetBoard';
 import './game.css';
 import UIfx from 'uifx';
 import doAudio from '../sounds/do.wav';
@@ -449,7 +449,7 @@ class TetrisMarathon extends React.Component {
                     this.setState({
                         isAlive: false,
                     })
-                    this.props.handleGameOver(this.state.score);
+                    this.props.handleTetrisMarathonOver(this.state.score);
                     return true;
                 }
             }
@@ -665,21 +665,33 @@ class TetrisMarathon extends React.Component {
 
     render() {
         return (
-            <div className="container">
+            <div className="gameContainer">
+                <div className="topBoard">
+                    {/* TODO: get player name */}
+                    <h3 style={{display: "inline-block", marginLeft: "250px", width: "250px", height: "50px"}}> {this.props.name} </h3>
+                    <h3 style={{display: "inline-block", marginRight: "250px", width: "250px", height: "50px", whiteSpace: "pre-line"}}> Score </h3>
+                    <h4 style={{display: "inline-block", marginLeft: "500px", width: "250px", height: "50px"}}> {this.state.score} </h4>
+                </div>
+                <div className="leftBoard">
+                    <h3> Hold </h3>
+                    <SingleTetBoard 
+                        color={this.tetrominoTypeToColor(this.state.heldBlock)} 
+                        pos={this.tetrominoTypeToNextPos(this.state.heldBlock)} />
+                    <h3> Level </h3>
+                    <h4> {this.getLevel()} </h4>
+                </div>
                 <GameBoard
                     gameBoard={this.state.gameBoard}
                     active={this.state.active}
                     handleSpaceInput={this.handleSpaceInput}
                     isPaused={this.state.isPaused}
                 />
-                <ScoreBoard
-                    level={this.getLevel()}
-                    score={this.state.score}
-                    nextTetColor={this.tetrominoTypeToColor(this.state.nextTetType)}
-                    nextTetPos={this.tetrominoTypeToNextPos(this.state.nextTetType)}
-                    heldTetColor={this.tetrominoTypeToColor(this.state.heldBlock)}
-                    heldTetPos={this.tetrominoTypeToNextPos(this.state.heldBlock)}
-                />
+                <div className="rightBoard">
+                    <h3> Next </h3>
+                    <SingleTetBoard 
+                        color={this.tetrominoTypeToColor(this.state.nextTetType)} 
+                        pos={this.tetrominoTypeToNextPos(this.state.nextTetType)} />
+                </div>
             </div>
         );
     }

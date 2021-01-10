@@ -1,6 +1,9 @@
 import React from 'react';
 import Block from './Block';
 
+/**
+ * This component is the main game board. 
+ */
 class GameBoard extends React.Component {
     constructor(props) {
         super(props);

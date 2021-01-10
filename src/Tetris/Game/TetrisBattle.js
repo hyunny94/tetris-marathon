@@ -1,6 +1,5 @@
 import React from 'react';
 import GameBoard from './Components/GameBoard';
-import ScoreBoard from './Components/ScoreBoard';
 import './game.css';
 import UIfx from 'uifx';
 import doAudio from '../sounds/do.wav';
@@ -680,20 +679,12 @@ class TetrisBattle extends React.Component {
 
     render() {
         return (
-            <div className="container">
+            <div className="gameContainer">
                 <GameBoard
                     gameBoard={this.state.gameBoard}
                     active={this.state.active}
                     handleSpaceInput={this.handleSpaceInput}
                     isPaused={this.state.isPaused}
-                />
-                <ScoreBoard
-                    level={this.getLevel()}
-                    score={this.state.score}
-                    nextTetColor={this.tetrominoTypeToColor(this.state.nextTetType)}
-                    nextTetPos={this.tetrominoTypeToNextPos(this.state.nextTetType)}
-                    heldTetColor={this.tetrominoTypeToColor(this.state.heldBlock)}
-                    heldTetPos={this.tetrominoTypeToNextPos(this.state.heldBlock)}
                 />
             </div>
         );
