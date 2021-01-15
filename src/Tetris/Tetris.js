@@ -163,7 +163,8 @@ class Tetris extends React.Component {
                             name={this.state.name} />;
                 break;
             case 3:
-                screen = <TetrisBattle />;
+                screen = <TetrisBattle 
+                            socket={this.state.socket} />;
                 break;
             default:
                 break;

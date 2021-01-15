@@ -66,3 +66,12 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 ### `npm run build` fails to minify
 
 This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+
+### Tetromino Types And Their Colors
+- 0: T -> #C608F4
+- 1: J -> #EFC30E
+- 2: L -> #134EEA
+- 3: I -> cyan
+- 4: O -> yellow
+- 5: S -> #24EA13
+- 6: Z -> #F83F08

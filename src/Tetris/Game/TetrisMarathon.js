@@ -1,7 +1,9 @@
 import React from 'react';
-import GameBoard from './Components/GameBoard';
 import SingleTetBoard from './Components/SingleTetBoard';
 import './game.css';
+import { getCleanBoard, drawGhostPiece, releaseNextTetromino, 
+    holdOrExchange, moveLeft, moveRight, rotate,
+    drop, handleSpaceInput, pauseOrResume } from '../Functions';
 import UIfx from 'uifx';
 import doAudio from '../sounds/do.wav';
 import reAudio from '../sounds/re.wav';
@@ -23,24 +25,16 @@ class TetrisMarathon extends React.Component {
     constructor(props) {
         super(props);
 
-        // Draw an empty game board
-        const gameBoard = [];
-        for (let r = 0; r < 40; r++) {
-            gameBoard.push([]);
-            for (let c = 0; c < 10; c++) {
-                gameBoard[r].push(
-                    { filled: false, color: "#2C2726", active: false, pivot: false }
-                );
-            }
-        }
-
         this.state = {
-            score: 0,
+            // NEW
+            score: 0, 
+            // NEW
             totalLinesCleared: 0, // level is 1 + [totalLinesCleared] // 10
-            combo: -1,
-            isAlive: true,
+            combo: -1, 
+            // NEW
+            isAlive: true, 
             isPaused: false,
-            gameBoard: gameBoard,
+            gameBoard: getCleanBoard(),
             active: [
                 { row: -1, col: -1, pivot: false },
                 { row: -1, col: -1, pivot: false },
@@ -52,42 +46,47 @@ class TetrisMarathon extends React.Component {
             heldBlock: null,
             holdUsed: false,
             nextTetType: Math.floor(Math.random() * 7),
-            hardDrop: false,
+            // NEW
+            hardDrop: false, 
             prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
         };
 
-        this.drop = this.drop.bind(this);
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
-        this.handleSpaceInput = this.handleSpaceInput.bind(this);
     }
 
 
     handleKeyboardInput(event) {
         event.preventDefault();
+
+        // "p" for pausing OR resuming the game
+        if (event.keyCode === 80) {
+            pauseOrResume();
+            return;
+        }
+        
+        // if the game is paused the following keys do not have any effects.
+        if (this.state.isPaused) {
+            return;
+        }
+
         switch (event.keyCode) {
             case 16: // "shift" for holding a piece OR exchanging with held piece
-                // console.log("hold or exchange");
-                !this.state.isPaused && this.holdOrExchange();
+                this.holdOrExchange();
                 break;
             case 37: // left arrow
-                // console.log("left");
-                !this.state.isPaused && this.moveLeftRight("left");
+                this.moveLeftRight("left");
                 break;
             case 38: // up arrow
-                // console.log("up");
-                !this.state.isPaused && this.rotate();
+                this.rotate();
                 break;
             case 39: // right arrow
-                // console.log("right");
-                !this.state.isPaused && this.moveLeftRight("right");
+                this.moveLeftRight("right");
                 break;
             case 40: // down arrow
-                // console.log("down");
-                !this.state.isPaused && this.drop();
+                this.drop();
                 break;
-            case 80: // "p" for pausing OR resuming the game
-                // console.log("pause or resume");
-                this.pauseOrResume();
+            case 32: // space 
+                this.handleSpaceInput(this.state);
                 break;
             default:
                 break;
@@ -667,27 +666,25 @@ class TetrisMarathon extends React.Component {
         return (
             <div className="gameContainer">
                 <div className="topBoard">
-                    {/* TODO: get player name */}
                     <h3 style={{display: "inline-block", marginLeft: "250px", width: "250px", height: "50px"}}> {this.props.name} </h3>
-                    <h3 style={{display: "inline-block", marginRight: "250px", width: "250px", height: "50px", whiteSpace: "pre-line"}}> Score </h3>
+                    <h3 style={{display: "inline-block", marginRight: "250px", width: "250px", height: "50px", whiteSpace: "pre-line"}}> SCORE </h3>
                     <h4 style={{display: "inline-block", marginLeft: "500px", width: "250px", height: "50px"}}> {this.state.score} </h4>
                 </div>
                 <div className="leftBoard">
-                    <h3> Hold </h3>
+                    <h3> HOLD </h3>
                     <SingleTetBoard 
                         color={this.tetrominoTypeToColor(this.state.heldBlock)} 
                         pos={this.tetrominoTypeToNextPos(this.state.heldBlock)} />
-                    <h3> Level </h3>
+                    <h3> LEVEL </h3>
                     <h4> {this.getLevel()} </h4>
+                    <h3> LINES </h3>
+                    <h4> {this.state.totalLinesCleared} </h4>
                 </div>
-                <GameBoard
-                    gameBoard={this.state.gameBoard}
-                    active={this.state.active}
-                    handleSpaceInput={this.handleSpaceInput}
-                    isPaused={this.state.isPaused}
-                />
+                <div className="gameBoard">
+                    {drawGhostPiece(this.state)}
+                </div>
                 <div className="rightBoard">
-                    <h3> Next </h3>
+                    <h3> NEXT </h3>
                     <SingleTetBoard 
                         color={this.tetrominoTypeToColor(this.state.nextTetType)} 
                         pos={this.tetrominoTypeToNextPos(this.state.nextTetType)} />
