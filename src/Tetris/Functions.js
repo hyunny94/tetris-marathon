@@ -113,7 +113,7 @@ function ghostColor(state) {
  * @param {Number} type type of the tetromino 
  * @returns {Object[]} initial positions of the next tetromino
  */
-function tetrominoTypeToNextPos(type) {
+export function tetrominoTypeToNextPos(type) {
     switch (type) {
         case 0: // T
             return [{ row: 20, col: 4, pivot: false },
@@ -160,7 +160,7 @@ function tetrominoTypeToNextPos(type) {
  * @param {Number} type type of the tetromino
  * @returns {String} color of the type of tetromino
  */
-function tetrominoTypeToColor(type) {
+export function tetrominoTypeToColor(type) {
     switch (type) {
         case 0: // T
             return "#C608F4";
@@ -233,6 +233,7 @@ function currInactiveToActive(board, newActive, newColor) {
  * @returns {Object} updated state of the game
  */
 function clearRows(state) {
+    console.log("clearRows")
     let { gameBoard, combo } = state;
     // only add non-full rows starting from the bottom 
     let newBoard = [];
@@ -266,29 +267,13 @@ function clearRows(state) {
     }
 
     const newCombo = numClearedRow > 0 ? combo + 1 : -1;
-    const newPrevMoveDifficult = numClearedRow === 4 ? true : false
-    switch (numClearedRow) {
-        case 0:
-            break;
-        case 1:
-            makeComboSound(newCombo)
-            break;
-        case 2:
-            makeComboSound(newCombo)
-            break;
-        case 3:
-            makeComboSound(newCombo)
-            break;
-        case 4:
-            makeComboSound(newCombo)
-            break;
-    }
+    makeComboSound(newCombo);
 
     return {
         ...state,
         gameBoard: newBoard,
         combo: newCombo,
-        prevMoveDifficult: newPrevMoveDifficult,
+        prevMoveDifficult: numClearedRow === 4 ? true : false,
     };
 }
 
@@ -329,6 +314,7 @@ export function drawGhostPiece(state) {
  * @returns {Object} new state of the game
  */
 export function releaseNextTetromino(state) {
+    console.log("release")
     let { nextTetType, gameBoard } = state;
     let nextPos = tetrominoTypeToNextPos(nextTetType);
     let nextColor = tetrominoTypeToColor(nextTetType);
@@ -355,6 +341,7 @@ export function releaseNextTetromino(state) {
         activeBlockType: nextTetType,
         activeBlockOrientation: 0,
         nextTetType: Math.floor(Math.random() * 7),
+        holdUsed: false
     }
 }
 
@@ -377,8 +364,9 @@ export function getCleanBoard() {
 ///////////////////////////////////////////////////////////////////////////////
 // Functions related to handling users' keyboard inputs 
 ///////////////////////////////////////////////////////////////////////////////
-export function drop(state) {
-    let { active, gameBoard, nextTetType, activeBlockType, combo } = state;
+export function drop(state, beforeClearRows, afterClearRows) {
+    console.log("drop")
+    let { active, gameBoard, activeBlockType } = state;
     let board = gameBoard;
     active.sort((a, b) => { return a['row'] - b['row'] });
     for (let pos of active) {
@@ -393,13 +381,11 @@ export function drop(state) {
                 board[pos['row']][pos['col']]['active'] = false
             }
             const gameOver = checkGameOver(board); 
-            let res1;
+            let st;
             if (gameOver) {
-                console.log("game is over")
                 // TODO: clean the board. 
-                console.log("cleaning the board")
                 // TODO: KOed. tell the opponent. 
-                res1 = {...state, gameBoard: getCleanBoard(), active: [
+                st = {...state, gameBoard: getCleanBoard(), active: [
                     { row: -1, col: -1, pivot: false },
                     { row: -1, col: -1, pivot: false },
                     { row: -1, col: -1, pivot: false },
@@ -408,9 +394,11 @@ export function drop(state) {
                 activeBlockType: null,
                 activeBlockOrientation: 0,};
             } else {
-                res1 = clearRows({...state, gameBoard: board});
+                st = beforeClearRows({...state, gameBoard: board})
+                st = clearRows(st)
+                st = afterClearRows(st)
             }
-            return {...releaseNextTetromino(res1), holdUsed: false};
+            return releaseNextTetromino(st);
         }
     }
 
@@ -690,17 +678,17 @@ export function handleSpaceInput(state) {
     // make drop sound
     dropSound.play()
 
-    return drop({
+    return {
         ...state,
         gameBoard: board,
         active: newActive
-    });
+    };
 }
 
-export function pauseOrResume(state) {
+export function pauseOrResume(state, timer) {
     let { isPaused, softDropTimer }  = state;
     if (isPaused) {
-        softDropTimer = setInterval(drop, 1000, state);
+        softDropTimer = timer;
     }
     else {
         clearInterval(softDropTimer);

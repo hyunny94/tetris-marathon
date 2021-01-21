@@ -43,6 +43,7 @@ class TetrisBattle extends React.Component {
             holdUsed: false,
             nextTetType: Math.floor(Math.random() * 7),
             prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
+            softDropTimer: null
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
@@ -81,6 +82,7 @@ class TetrisBattle extends React.Component {
                 break;
             case 32: // space 
                 newState = handleSpaceInput(this.state);
+                newState = drop(newState)
                 break;
             default:
                 break;
@@ -101,7 +103,7 @@ class TetrisBattle extends React.Component {
     }
 
     componentWillUnmount() {
-        clearInterval(this.softDropTimer);
+        clearInterval(this.state.softDropTimer);
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
