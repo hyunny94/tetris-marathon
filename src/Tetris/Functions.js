@@ -233,7 +233,6 @@ function currInactiveToActive(board, newActive, newColor) {
  * @returns {Object} updated state of the game
  */
 function clearRows(state) {
-    console.log("clearRows")
     let { gameBoard, combo } = state;
     // only add non-full rows starting from the bottom 
     let newBoard = [];
@@ -314,7 +313,6 @@ export function drawGhostPiece(state) {
  * @returns {Object} new state of the game
  */
 export function releaseNextTetromino(state) {
-    console.log("release")
     let { nextTetType, gameBoard } = state;
     let nextPos = tetrominoTypeToNextPos(nextTetType);
     let nextColor = tetrominoTypeToColor(nextTetType);
@@ -365,7 +363,6 @@ export function getCleanBoard() {
 // Functions related to handling users' keyboard inputs 
 ///////////////////////////////////////////////////////////////////////////////
 export function drop(state, beforeClearRows, afterClearRows) {
-    console.log("drop")
     let { active, gameBoard, activeBlockType } = state;
     let board = gameBoard;
     active.sort((a, b) => { return a['row'] - b['row'] });
@@ -381,11 +378,10 @@ export function drop(state, beforeClearRows, afterClearRows) {
                 board[pos['row']][pos['col']]['active'] = false
             }
             const gameOver = checkGameOver(board); 
-            let st;
             if (gameOver) {
                 // TODO: clean the board. 
                 // TODO: KOed. tell the opponent. 
-                st = {...state, gameBoard: getCleanBoard(), active: [
+                state = {...state, gameBoard: getCleanBoard(), active: [
                     { row: -1, col: -1, pivot: false },
                     { row: -1, col: -1, pivot: false },
                     { row: -1, col: -1, pivot: false },
@@ -394,11 +390,18 @@ export function drop(state, beforeClearRows, afterClearRows) {
                 activeBlockType: null,
                 activeBlockOrientation: 0,};
             } else {
-                st = beforeClearRows({...state, gameBoard: board})
-                st = clearRows(st)
-                st = afterClearRows(st)
+                state = {...state, gameBoard: board}
+                // If a game requires processing before clearing full rows
+                if (beforeClearRows != undefined) {
+                    state = beforeClearRows(state)
+                } 
+                state = clearRows(state)
+                // If a game requires processing after clearing full rows
+                if (afterClearRows != undefined) {
+                    state = afterClearRows(state)
+                }
             }
-            return releaseNextTetromino(st);
+            return releaseNextTetromino(state);
         }
     }
 
