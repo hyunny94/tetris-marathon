@@ -102,6 +102,11 @@ class TetrisBattle extends React.Component {
             this.setState(pauseOrResume(this.state, softDropTimer));
         });
 
+        // display how many seconds of pause is left
+        this.props.socket.on("displayPauseSecLeft", (secLeft) => {
+            console.log(secLeft, " seconds left.")
+        })
+
         this.setState(releaseNextTetromino(this.state), 
             () => {
                 this.setState({softDropTimer: setInterval(() => {
