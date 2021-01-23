@@ -54,7 +54,7 @@ class TetrisBattle extends React.Component {
 
         // "p" for pausing OR resuming the game
         if (event.keyCode === 80) {
-            this.setState(pauseOrResume(this.state));
+            this.props.socket.emit("pauseOrResume");
             return;
         }
         
@@ -91,6 +91,17 @@ class TetrisBattle extends React.Component {
     }
 
     componentDidMount() {
+        // set up game-related socket 
+        this.props.socket.on("pauseOrResume", () => {
+            let softDropTimer = null 
+            if (this.state.isPaused) {
+                softDropTimer = setInterval(() => {
+                    this.setState(drop(this.state))
+                }, 1000)
+            }
+            this.setState(pauseOrResume(this.state, softDropTimer));
+        });
+
         this.setState(releaseNextTetromino(this.state), 
             () => {
                 this.setState({softDropTimer: setInterval(() => {
