@@ -206,7 +206,7 @@ function checkGameOver(gameBoard) {
 function currActiveToInactive(board, active) {
     active.forEach((pos) => {
         board[pos['row']][pos['col']] =
-            { filled: false, color: "#2C2726", active: false, pivot: false };
+            { filled: false, color: "#2C2726", active: false, pivot: false, garbage: false };
     })
     return board;
 }
@@ -221,7 +221,7 @@ function currActiveToInactive(board, active) {
 function currInactiveToActive(board, newActive, newColor) {
     newActive.forEach((pos) => {
         board[pos['row']][pos['col']] =
-            { filled: true, color: newColor, active: true, pivot: pos['pivot'] };
+            { filled: true, color: newColor, active: true, pivot: pos['pivot'], garbage: false };
     })
     return board;
 }
@@ -233,7 +233,7 @@ function currInactiveToActive(board, newActive, newColor) {
  * @returns {Object} updated state of the game
  */
 function clearRows(state) {
-    let { gameBoard, combo } = state;
+    let { gameBoard, combo, numClearedRow: prevNumClearedRow } = state;
     // only add non-full rows starting from the bottom 
     let newBoard = [];
     // TODO: set gameBoard heights and width as constants so they can be easily
@@ -241,8 +241,10 @@ function clearRows(state) {
     for (let r = gameBoard.length - 1; r >= 20; r--) {
         let filled = true;
         for (let c = 0; c < 10; c++) {
-            if (!gameBoard[r][c]['filled']) {
+            // if the row is a garbage row OR not filled, we cannot clear. 
+            if (gameBoard[r][c]['garbage'] || !gameBoard[r][c]['filled']) {
                 filled = false;
+                break;
             }
         }
         if (!filled) {
@@ -260,7 +262,7 @@ function clearRows(state) {
     for (let r = 0; r < remainingRows; r++) {
         let row = [];
         for (let c = 0; c < 10; c++) {
-            row.push({ filled: false, color: "#2C2726", active: false, pivot: false });
+            row.push({ filled: false, color: "#2C2726", active: false, pivot: false, garbage: false });
         }
         newBoard.unshift(row);
     }
@@ -272,7 +274,8 @@ function clearRows(state) {
         ...state,
         gameBoard: newBoard,
         combo: newCombo,
-        prevMoveDifficult: numClearedRow === 4 ? true : false,
+        prevMoveDifficult: prevNumClearedRow === 4,
+        numClearedRow
     };
 }
 
@@ -329,7 +332,7 @@ export function releaseNextTetromino(state) {
     })
     // update board
     nextPos.forEach((pos) => {
-        gameBoard[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'] }
+        gameBoard[pos['row']][pos['col']] = { filled: true, color: nextColor, active: true, pivot: pos['pivot'], garbage: false }
     });
 
     return {
@@ -352,7 +355,7 @@ export function getCleanBoard() {
         cleanBoard.push([]);
         for (let c = 0; c < 10; c++) {
             cleanBoard[r].push(
-                { filled: false, color: "#2C2726", active: false, pivot: false }
+                { filled: false, color: "#2C2726", active: false, pivot: false, garbage: false }
             );
         }
     }
@@ -412,7 +415,7 @@ export function drop(state, beforeClearRows, afterClearRows) {
     // new positions => active
     for (let pos of active) {
         board[pos['row'] + 1][pos['col']] =
-            { filled: true, color: color, active: true, pivot: pos['pivot'] };
+            { filled: true, color: color, active: true, pivot: pos['pivot'], garbage: false };
     }
     return {
         ...state,
@@ -487,8 +490,8 @@ export function moveLeft(state) {
         for (let pos of active) {
             let prev_color = gameBoard[pos['row']][pos['col']]['color'];
             let prev_pivot = gameBoard[pos['row']][pos['col']]['pivot'];
-            gameBoard[pos['row']][pos['col']] = { filled: false, color: "#2C2726", active: false, pivot: false };
-            gameBoard[pos['row']][pos['col'] + dir_int] = { filled: true, color: prev_color, active: true, pivot: prev_pivot };
+            gameBoard[pos['row']][pos['col']] = { filled: false, color: "#2C2726", active: false, pivot: false, garbage: false };
+            gameBoard[pos['row']][pos['col'] + dir_int] = { filled: true, color: prev_color, active: true, pivot: prev_pivot, garbage: false };
         }
         return {
             ...state,
@@ -524,8 +527,8 @@ export function moveRight(state) {
         for (let pos of active) {
             let prev_color = gameBoard[pos['row']][pos['col']]['color'];
             let prev_pivot = gameBoard[pos['row']][pos['col']]['pivot'];
-            gameBoard[pos['row']][pos['col']] = { filled: false, color: "#2C2726", active: false, pivot: false };
-            gameBoard[pos['row']][pos['col'] + dir_int] = { filled: true, color: prev_color, active: true, pivot: prev_pivot };
+            gameBoard[pos['row']][pos['col']] = { filled: false, color: "#2C2726", active: false, pivot: false, garbage: false };
+            gameBoard[pos['row']][pos['col'] + dir_int] = { filled: true, color: prev_color, active: true, pivot: prev_pivot, garbage: false };
         }
         return {
             ...state,
@@ -650,7 +653,7 @@ export function rotate(state) {
     for (let pos of new_active) {
         let row = pos['row'];
         let col = pos['col'];
-        gameBoard[row][col] = { filled: true, color: color, active: true, pivot: pos['pivot'] };
+        gameBoard[row][col] = { filled: true, color: color, active: true, pivot: pos['pivot'], garbage: false };
     }
 
     const nextOrientation = activeBlockOrientation === 3 ? 0 : activeBlockOrientation + 1;
@@ -674,7 +677,7 @@ export function handleSpaceInput(state) {
     ghostPieceSet.forEach((pos) => {
         const row = Math.floor(Number(pos) / 10);
         const col = Number(pos) % 10;
-        board[row][col] = { filled: true, color: blockColor, active: true, pivot: false };
+        board[row][col] = { filled: true, color: blockColor, active: true, pivot: false, garbage: false };
         newActive.push({ row: row, col: col, pivot: false });
     })
 

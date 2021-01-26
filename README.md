@@ -75,3 +75,7 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 - 4: O -> yellow
 - 5: S -> #24EA13
 - 6: Z -> #F83F08
+
+### Main game logic order 
+- drop() -> beforeClearRows() -> clearRows() -> afterClearRows() -> releaseNextTetromino()
+- beforeClearRows() and afterClearRows() are game-specific.

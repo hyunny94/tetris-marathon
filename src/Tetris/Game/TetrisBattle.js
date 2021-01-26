@@ -3,6 +3,8 @@ import './game.css';
 import { getCleanBoard, drawGhostPiece, releaseNextTetromino, 
          holdOrExchange, moveLeft, moveRight, rotate,
          drop, handleSpaceInput, pauseOrResume } from '../Functions';
+import { PERFECT_CLEAR_GARBAGE, TWO_ROWS_CLEARED_GARBAGE, THREE_ROWS_CLEARED_GARBAGE, 
+    TETRIS_GARBAGE, BTB_TETRIS_GARBAGE } from '../Constants';
 
 
 /** Tetris Battle Game mode is playered by two players going against each other. 
@@ -42,11 +44,14 @@ class TetrisBattle extends React.Component {
             heldBlock: null,
             holdUsed: false,
             nextTetType: Math.floor(Math.random() * 7),
-            prevMoveDifficult: false, // currently tetris (4 line clears) is the only difficult move there is.
-            softDropTimer: null
+            prevMoveDifficult: false, // True if the previous tetromino land was a tetris (4 lines cleared)
+            softDropTimer: null, 
+            numGarbageToBeAdded: 0, // number of garbage lines to be added when the next tet lands. 
+            numClearedRow: null, // number of lines cleared by the previous tetromino landing.
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
+        this.afterClearRows = this.afterClearRows.bind(this);
     }
 
     handleKeyboardInput(event) {
@@ -78,11 +83,11 @@ class TetrisBattle extends React.Component {
                 newState = moveRight(this.state);
                 break;
             case 40: // down arrow
-                newState = drop(this.state);
+                newState = drop(this.state, undefined, this.afterClearRows);
                 break;
             case 32: // space 
                 newState = handleSpaceInput(this.state);
-                newState = drop(newState)
+                newState = drop(newState, undefined, this.afterClearRows)
                 break;
             default:
                 break;
@@ -96,7 +101,7 @@ class TetrisBattle extends React.Component {
             let softDropTimer = null 
             if (this.state.isPaused) {
                 softDropTimer = setInterval(() => {
-                    this.setState(drop(this.state))
+                    this.setState(drop(this.state, undefined, this.afterClearRows))
                 }, 1000)
             }
             this.setState(pauseOrResume(this.state, softDropTimer));
@@ -107,10 +112,16 @@ class TetrisBattle extends React.Component {
             console.log(secLeft, " seconds left.")
         })
 
+        // receive lines from opponents.. 
+        this.props.socket.on("addGarbageLines", (numGarbageLines) => {
+            console.log("received ", numGarbageLines, " garbage lines from the opponent.");
+            this.setState({numGarbageToBeAdded: this.state.numGarbageToBeAdded + numGarbageLines});
+        })
+
         this.setState(releaseNextTetromino(this.state), 
             () => {
                 this.setState({softDropTimer: setInterval(() => {
-                    this.setState(drop(this.state))
+                    this.setState(drop(this.state, undefined, this.afterClearRows))
                 }, 1000)}, () => {
                     document.addEventListener("keydown", this.handleKeyboardInput, false);
                 })
@@ -121,6 +132,139 @@ class TetrisBattle extends React.Component {
     componentWillUnmount() {
         clearInterval(this.state.softDropTimer);
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
+    }
+
+    beforeClearRows() {
+         
+    }
+
+    afterClearRows(state) {
+        // FIRST ATTACK!
+        // Attack 1. Check for perfect clear 
+        // (can send the opponent 10 lines if the board is completely empty!) 
+        let { combo, numClearedRow, gameBoard, prevMoveDifficult } = state;
+        let isBoardClean = true;
+        for (let r = gameBoard.length - 1; r >= 20; r--) {
+            let isRowClean = true;
+            for (let c = 0; c < 10; c++) {
+                if (gameBoard[r][c]['filled']) {
+                    isRowClean = false;
+                    isBoardClean = false;
+                    break;
+                }
+            }
+            if (!isRowClean) {
+                break;
+            }
+        }
+        if (isBoardClean) {
+            console.log("Perfect Clear.")
+            state = this.sendGarbageLines(state, PERFECT_CLEAR_GARBAGE);
+        }
+        // Attack 2. check combo
+        switch (combo) {
+            // Initial value
+            case -1: 
+            // First line clear
+            case 0: 
+                break
+            case 1: 
+            case 2: 
+                console.log(combo, " combo.")
+                state = this.sendGarbageLines(state, 1)
+                break
+            case 3:
+            case 4:
+                console.log(combo, " combo.")
+                state = this.sendGarbageLines(state, 2)
+                break
+            case 5:
+            case 6:
+                console.log(combo, " combo.")
+                state = this.sendGarbageLines(state, 3)
+                break
+            // combo >= 7 sends 4 lines. 
+            default: 
+                console.log(combo, " combo.")
+                state = this.sendGarbageLines(state, 4)
+                break
+        }
+        // Attack 3. check numClearedRow (also check Double Tetris)
+        switch (numClearedRow) {
+            case 2: 
+                console.log("Double")
+                state = this.sendGarbageLines(state, TWO_ROWS_CLEARED_GARBAGE)
+                break
+            case 3:
+                console.log("Triple")
+                state = this.sendGarbageLines(state, THREE_ROWS_CLEARED_GARBAGE)
+                break
+            case 4: 
+                if (prevMoveDifficult) {
+                    console.log("Tetris")
+                    state = this.sendGarbageLines(state, BTB_TETRIS_GARBAGE)
+                } else {
+                    console.log("Back-to-back tetris")
+                    state = this.sendGarbageLines(state, TETRIS_GARBAGE)
+                }
+                break
+            case 0:
+            case 1:
+            default: 
+                break
+        }
+
+        // THEN RECEIVE!
+        // Receive garbage lines.. 
+        state = this.addGarbageLines(state);
+
+        return state;
+    }
+
+    /**
+     * @param {*} state
+     * @param {*} numGarbageLinesToSend 
+     */
+    sendGarbageLines(state, numGarbageLinesToSend) {
+        /* Garbage countering (when a player performs a special move that sends garbage, 
+        * It is first used to reduce the number of garbage lines he will receive) */
+        let numGarbageToBeAdded = Math.max(state.numGarbageToBeAdded - numGarbageLinesToSend, 0);
+        let linesToSend = Math.max(numGarbageLinesToSend - state.numGarbageToBeAdded, 0);
+        if (linesToSend > 0) {
+            this.props.socket.emit("addGarbageLines", linesToSend);
+        }
+        return { ...state, numGarbageToBeAdded }
+    }
+
+    // Add state.numGarbageToBeAdded of lines to the bottom of the game board 
+    addGarbageLines(state) {
+        let { gameBoard, numGarbageToBeAdded } = state;
+        let newBoard = [];
+        // Add grey lines 
+        for (let i = 0; i < numGarbageToBeAdded; i++) {
+            let row = [];
+            for (let c = 0; c < 10; c++) {
+                row.push({ filled: true, color: "#afa4a2", active: false, pivot: false, garbage: true });
+            }
+            newBoard.unshift(row);
+        }
+
+        // Add existing lines 
+        for (let i = 39; i >= 20 + numGarbageToBeAdded; i--) {
+            newBoard.unshift(gameBoard[i]);
+        }
+
+        // fill the top 
+        const remainingRows = 40 - newBoard.length;
+        for (let r = 0; r < remainingRows; r++) {
+            let row = [];
+            for (let c = 0; c < 10; c++) {
+                row.push({ filled: false, color: "#2C2726", active: false, pivot: false, garbage: false });
+            }
+            newBoard.unshift(row);
+        }
+
+        return { ...state, gameBoard: newBoard, numGarbageToBeAdded: 0};
     }
 
     render() {

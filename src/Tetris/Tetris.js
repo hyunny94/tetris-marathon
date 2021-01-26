@@ -42,12 +42,12 @@ class Tetris extends React.Component {
                     { name: "not", score: 100 },
                     { name: "load", score: 100 },
                     { name: "scores", score: 100 },
-                    { name: "dummy", score: 100 },
-                    { name: "dummy", score: 100 },
-                    { name: "dummy", score: 100 },
-                    { name: "dummy", score: 100 },
-                    { name: "dummy", score: 100 },
-                    { name: "dummy", score: 100 }]
+                    { name: "garbage", score: 100 },
+                    { name: "garbage", score: 100 },
+                    { name: "garbage", score: 100 },
+                    { name: "garbage", score: 100 },
+                    { name: "garbage", score: 100 },
+                    { name: "garbage", score: 100 }]
                 })
             });
     }

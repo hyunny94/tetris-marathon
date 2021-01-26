@@ -7,11 +7,6 @@ import { getCleanBoard, drawGhostPiece, releaseNextTetromino,
     tetrominoTypeToColor, tetrominoTypeToNextPos } from '../Functions';
 
 
-/**
- * drop() -> beforeClearRows() -> clearRows() -> afterClearRows() -> releaseNextTetromino()
- * 
- * beforeClearRows() and afterClearRows() are game-specific.
- */
 class TetrisMarathon extends React.Component {
     constructor(props) {
         super(props);
