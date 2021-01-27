@@ -8,6 +8,7 @@ import faAudio from './sounds/fa.wav';
 import solAudio from './sounds/sol.wav';
 import laAudio from './sounds/la.wav';
 import dropAudio from './sounds/drop.mp3';
+import { GAMEBOARD_BACKGROUND } from './Constants';
 
 const doSound = new UIfx(doAudio)
 const reSound = new UIfx(reAudio)
@@ -59,8 +60,7 @@ function makeComboSound(combo) {
  * @param {Object} state current state of the game
  * @returns {Set<string>} set of coordinates representing the ghost 
  */
-function ghostPiece(state) {
-    let { gameBoard, active } = state;
+export function ghostPiece(gameBoard, active) {
     let ghostPieces = active;
 
     // update [ghostPieces] to the location that the current tetromino would drop to.
@@ -99,8 +99,7 @@ function ghostPiece(state) {
  * @param {Object} state current state of the game
  * @returns {String} color of the ghost tetromino 
  */
-function ghostColor(state) {
-    let { gameBoard, active } = state;
+export function ghostColor(gameBoard, active) {
     const pos = active[0];
     if (pos['row'] === -1) {
         return "#2C2726";
@@ -186,7 +185,7 @@ export function tetrominoTypeToColor(type) {
  * @param {Object[][]} gameBoard current game board
  * @returns {Boolean} true if game is over
  */
-function checkGameOver(gameBoard) {
+export function checkGameOver(gameBoard) {
     for (let r = 18; r < 20; r++) {
         for (let c = 3; c < 7; c++) {
             if (gameBoard[r][c]['filled']) {
@@ -198,15 +197,29 @@ function checkGameOver(gameBoard) {
 }
 
 /**
- * Return a new game board with current active tet positions turned off.
+ * Return a new game board with current active tet positions' active and filled flags off.
+ * @param {Object[][]} board current game board
+ * @param {Object[]} active current active tet positions
+ * @returns {Object[][]} new game board with current active tet positions turned inactive
+ */
+function currActiveDisappear(board, active) {
+    active.forEach((pos) => {
+        board[pos['row']][pos['col']].color = GAMEBOARD_BACKGROUND;
+        board[pos['row']][pos['col']].filled = false
+        board[pos['row']][pos['col']].active = false
+    })
+    return board;
+}
+
+/**
+ * Return a new game board with current active tet positions' active flag turned off.
  * @param {Object[][]} board current game board
  * @param {Object[]} active current active tet positions
  * @returns {Object[][]} new game board with current active tet positions turned inactive
  */
 function currActiveToInactive(board, active) {
     active.forEach((pos) => {
-        board[pos['row']][pos['col']] =
-            { filled: false, color: "#2C2726", active: false, pivot: false, garbage: false };
+        board[pos['row']][pos['col']].active = false
     })
     return board;
 }
@@ -287,9 +300,7 @@ function clearRows(state) {
  * @param {Object} state current state of the game
  * @returns {JSX.Element[][]} new game board with ghost drawn 
  */
-export function drawGhostPiece(state) {
-    let { gameBoard } = state
-    let ghostPieceSet = ghostPiece(state);
+export function drawGhostPiece(gameBoard, ghostPieceSet, ghostColor) {
     let newBoard = [];
     for (let r = 20; r < gameBoard.length; r++) {
         let newRow = [];
@@ -297,7 +308,7 @@ export function drawGhostPiece(state) {
             let isGhostPiece = ghostPieceSet.has("" + r + c);
             newRow.push(<Block
                 ghost={isGhostPiece}
-                ghostColor={ghostColor(state)}
+                ghostColor={ghostColor} 
                 active={gameBoard[r][c]['active']}
                 pivot={gameBoard[r][c]['pivot']}
                 color={gameBoard[r][c]['color']}
@@ -362,65 +373,64 @@ export function getCleanBoard() {
     return cleanBoard;
 } 
 
+function handleTetLand(state, beforeClearRows, afterClearRows, gameOverHandler) {
+    // turn this collection of blocks (and this collection ONLY) to inactive,
+    // for (let pos of active) {
+    //     board[pos['row']][pos['col']]['active'] = false
+    // }
+    let board = currActiveToInactive(state.gameBoard, state.active);
+    state = {...state, gameBoard: board}
+    const gameOver = checkGameOver(board); 
+    // Board is full. Cannot release new tet.
+    if (gameOver) {
+        return gameOverHandler(state);
+    } 
+    // Release new tet.
+    else {
+        // If a game requires processing before clearing full rows
+        if (beforeClearRows != undefined) {
+            state = beforeClearRows(state)
+        } 
+        state = clearRows(state)
+        // If a game requires processing after clearing full rows
+        if (afterClearRows != undefined) {
+            state = afterClearRows(state)
+        }
+        return releaseNextTetromino(state);
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Functions related to handling users' keyboard inputs 
 ///////////////////////////////////////////////////////////////////////////////
-export function drop(state, beforeClearRows, afterClearRows) {
+export function drop(state, beforeClearRows, afterClearRows, gameOverHandler) {
     let { active, gameBoard, activeBlockType } = state;
     let board = gameBoard;
-    active.sort((a, b) => { return a['row'] - b['row'] });
+    // Why do this?
+    // active.sort((a, b) => { return a['row'] - b['row'] });
     for (let pos of active) {
         const row = pos['row'];
         const col = pos['col'];
         // cannot drop anymore
-        if (row === 39 || // 1. current tet reached the ground
-            (!board[row + 1][col]['active'] && board[row + 1][col]['filled']) // 2. current tet reached another inactive tet
+        if (// 1. current tet reached the ground
+            row === 39 || 
+            // 2. current tet reached another inactive tet
+            (!board[row + 1][col]['active'] && board[row + 1][col]['filled']) 
             ) {
-            // turn this collection of blocks (and this collection ONLY) to inactive,
-            for (let pos of active) {
-                board[pos['row']][pos['col']]['active'] = false
-            }
-            const gameOver = checkGameOver(board); 
-            if (gameOver) {
-                // TODO: clean the board. 
-                // TODO: KOed. tell the opponent. 
-                state = {...state, gameBoard: getCleanBoard(), active: [
-                    { row: -1, col: -1, pivot: false },
-                    { row: -1, col: -1, pivot: false },
-                    { row: -1, col: -1, pivot: false },
-                    { row: -1, col: -1, pivot: false }
-                ],
-                activeBlockType: null,
-                activeBlockOrientation: 0,};
-            } else {
-                state = {...state, gameBoard: board}
-                // If a game requires processing before clearing full rows
-                if (beforeClearRows != undefined) {
-                    state = beforeClearRows(state)
-                } 
-                state = clearRows(state)
-                // If a game requires processing after clearing full rows
-                if (afterClearRows != undefined) {
-                    state = afterClearRows(state)
-                }
-            }
-            return releaseNextTetromino(state);
+            return handleTetLand(state, beforeClearRows, afterClearRows, gameOverHandler);
         }
     }
 
     // All positions clear. the block can move down. 
     // active ones => inactive
-    let color = tetrominoTypeToColor(activeBlockType);
-    board = currActiveToInactive(board, active);
+    board = currActiveDisappear(board, active);
     // new positions => active
-    for (let pos of active) {
-        board[pos['row'] + 1][pos['col']] =
-            { filled: true, color: color, active: true, pivot: pos['pivot'], garbage: false };
-    }
+    active = active.map((e) => { e['row'] = e['row'] + 1; return e; })
+    board = currInactiveToActive(board, active, tetrominoTypeToColor(activeBlockType));
     return {
         ...state,
         gameBoard: board,
-        active: active.map((e) => { e['row'] = e['row'] + 1; return e; })
+        active
     };
 
 }
@@ -430,7 +440,7 @@ export function holdOrExchange(state) {
     if (!holdUsed) {
         // Exchange
         // make current active to inactive 
-        let board = currActiveToInactive(gameBoard, active);
+        let board = currActiveDisappear(gameBoard, active);
 
         if (heldBlock !== null) {
             const newActive = tetrominoTypeToNextPos(heldBlock);
@@ -647,7 +657,7 @@ export function rotate(state) {
     // rotate
     // active ones => inactive
     let color = tetrominoTypeToColor(activeBlockType);
-    gameBoard = currActiveToInactive(gameBoard, active);
+    gameBoard = currActiveDisappear(gameBoard, active);
 
     // new positions => active
     for (let pos of new_active) {
@@ -667,9 +677,9 @@ export function rotate(state) {
 }
 
 export function handleSpaceInput(state) {
-    let ghostPieceSet = ghostPiece(state);
     let { gameBoard, activeBlockType, nextTetType, combo, active } = state;
-    const board = currActiveToInactive(gameBoard, active);
+    let ghostPieceSet = ghostPiece(gameBoard, active);
+    const board = currActiveDisappear(gameBoard, active);
     const blockColor = tetrominoTypeToColor(activeBlockType);
 
     // inactive ones => active 

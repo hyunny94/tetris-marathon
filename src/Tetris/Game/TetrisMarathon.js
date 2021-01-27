@@ -4,7 +4,8 @@ import './game.css';
 import { getCleanBoard, drawGhostPiece, releaseNextTetromino, 
     holdOrExchange, moveLeft, moveRight, rotate,
     drop, handleSpaceInput, pauseOrResume,
-    tetrominoTypeToColor, tetrominoTypeToNextPos } from '../Functions';
+    tetrominoTypeToColor, tetrominoTypeToNextPos,
+    ghostPiece, ghostColor } from '../Functions';
 
 
 class TetrisMarathon extends React.Component {
@@ -216,31 +217,37 @@ class TetrisMarathon extends React.Component {
     }
 
     render() {
+        let { score, heldBlock, totalLinesCleared, nextTetType, 
+            gameBoard, active } = this.state;
+        let { name } = this.props;
         return (
             <div className="gameContainer">
                 <div className="topBoard">
-                    <h3 style={{display: "inline-block", marginLeft: "250px", width: "250px", height: "50px"}}> {this.props.name} </h3>
-                    <h3 style={{display: "inline-block", marginRight: "250px", width: "250px", height: "50px", whiteSpace: "pre-line"}}> SCORE </h3>
-                    <h4 style={{display: "inline-block", marginLeft: "500px", width: "250px", height: "50px"}}> {this.state.score} </h4>
+                    <h3 style={{display: "inline-block", marginLeft: "250px", 
+                    width: "250px", height: "50px"}}> {name} </h3>
+                    <h3 style={{display: "inline-block", marginRight: "250px", 
+                    width: "250px", height: "50px", whiteSpace: "pre-line"}}> SCORE </h3>
+                    <h4 style={{display: "inline-block", marginLeft: "500px", 
+                    width: "250px", height: "50px"}}> {score} </h4>
                 </div>
-                <div className="leftBoard">
+                <div className="statusBoard">
                     <h3> HOLD </h3>
                     <SingleTetBoard 
-                        color={tetrominoTypeToColor(this.state.heldBlock)} 
-                        pos={tetrominoTypeToNextPos(this.state.heldBlock)} />
+                        color={tetrominoTypeToColor(heldBlock)} 
+                        pos={tetrominoTypeToNextPos(heldBlock)} />
                     <h3> LEVEL </h3>
-                    <h4> {this.getLevel(this.state.totalLinesCleared)} </h4>
+                    <h4> {this.getLevel(totalLinesCleared)} </h4>
                     <h3> LINES </h3>
-                    <h4> {this.state.totalLinesCleared} </h4>
+                    <h4> {totalLinesCleared} </h4>
                 </div>
                 <div className="gameBoard">
-                    {drawGhostPiece(this.state)}
+                    {drawGhostPiece(gameBoard, ghostPiece(gameBoard, active), ghostColor(gameBoard, active))}
                 </div>
-                <div className="rightBoard">
+                <div className="statusBoard">
                     <h3> NEXT </h3>
                     <SingleTetBoard 
-                        color={tetrominoTypeToColor(this.state.nextTetType)} 
-                        pos={tetrominoTypeToNextPos(this.state.nextTetType)} />
+                        color={tetrominoTypeToColor(nextTetType)} 
+                        pos={tetrominoTypeToNextPos(nextTetType)} />
                 </div>
             </div>
         );

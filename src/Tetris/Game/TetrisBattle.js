@@ -1,8 +1,10 @@
 import React from 'react';
+import SingleTetBoard from './Components/SingleTetBoard';
 import './game.css';
-import { getCleanBoard, drawGhostPiece, releaseNextTetromino, 
-         holdOrExchange, moveLeft, moveRight, rotate,
-         drop, handleSpaceInput, pauseOrResume } from '../Functions';
+import { getCleanBoard, drawGhostPiece, ghostPiece, ghostColor, 
+         releaseNextTetromino, holdOrExchange, moveLeft, moveRight, 
+         rotate, drop, handleSpaceInput, pauseOrResume, 
+         tetrominoTypeToColor, tetrominoTypeToNextPos, checkGameOver } from '../Functions';
 import { PERFECT_CLEAR_GARBAGE, TWO_ROWS_CLEARED_GARBAGE, THREE_ROWS_CLEARED_GARBAGE, 
     TETRIS_GARBAGE, BTB_TETRIS_GARBAGE } from '../Constants';
 
@@ -48,10 +50,26 @@ class TetrisBattle extends React.Component {
             softDropTimer: null, 
             numGarbageToBeAdded: 0, // number of garbage lines to be added when the next tet lands. 
             numClearedRow: null, // number of lines cleared by the previous tetromino landing.
+            ko: 0, // number of times I KOed the opponent
+            totalLinesSent: 0, // number of lines sent to the opponent
+            /* Below are OPPONENT's state */
+            oppGameBoard: getCleanBoard(),
+            oppActive: [
+                { row: -1, col: -1, pivot: false },
+                { row: -1, col: -1, pivot: false },
+                { row: -1, col: -1, pivot: false },
+                { row: -1, col: -1, pivot: false }
+            ],
+            oppKo: 0, // number of times I got KOed by the opponent
+            oppTotalLinesSent: 0, // number of lines sent by the opponent 
+            oppNextTetType: null, // next tetromino type for the opponent
+            oppHeldBlock: null, // Tet held by the opponent
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
+        this.beforeClearRows = this.beforeClearRows.bind(this);
         this.afterClearRows = this.afterClearRows.bind(this);
+        this.gameOverHandler = this.gameOverHandler.bind(this);
     }
 
     handleKeyboardInput(event) {
@@ -72,6 +90,7 @@ class TetrisBattle extends React.Component {
         switch (event.keyCode) {
             case 16: // "shift" for holding a piece OR exchanging with held piece
                 newState = holdOrExchange(this.state);
+                this.props.socket.emit("heldBlockChange", newState.heldBlock);
                 break;
             case 37: // left arrow
                 newState = moveLeft(this.state);
@@ -83,16 +102,17 @@ class TetrisBattle extends React.Component {
                 newState = moveRight(this.state);
                 break;
             case 40: // down arrow
-                newState = drop(this.state, undefined, this.afterClearRows);
+                newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
                 break;
             case 32: // space 
                 newState = handleSpaceInput(this.state);
-                newState = drop(newState, undefined, this.afterClearRows)
+                newState = drop(newState, this.beforeClearRows, this.afterClearRows)
                 break;
             default:
                 break;
         }
         this.setState(newState);
+        this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
     }
 
     componentDidMount() {
@@ -101,7 +121,9 @@ class TetrisBattle extends React.Component {
             let softDropTimer = null 
             if (this.state.isPaused) {
                 softDropTimer = setInterval(() => {
-                    this.setState(drop(this.state, undefined, this.afterClearRows))
+                    let newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
+                    this.setState(newState)
+                    this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 }, 1000)
             }
             this.setState(pauseOrResume(this.state, softDropTimer));
@@ -118,10 +140,29 @@ class TetrisBattle extends React.Component {
             this.setState({numGarbageToBeAdded: this.state.numGarbageToBeAdded + numGarbageLines});
         })
 
-        this.setState(releaseNextTetromino(this.state), 
+        // receive oppGameBoard, and oppActive update 
+        this.props.socket.on("boardChange", (oppGameBoard, oppActive, oppNextTetType) => {
+            this.setState({ oppGameBoard, oppActive, oppNextTetType })
+        })
+
+        // opponent used hold feature
+        this.props.socket.on("heldBlockChange", (oppHeldBlock) => {
+            this.setState({ oppHeldBlock })
+        })
+
+        // opponent was KOed.
+        this.props.socket.on("KOed", () => {
+            this.setState({ ko: this.state.ko + 1 })
+        })
+
+        let newState = releaseNextTetromino(this.state) 
+        this.setState(newState, 
             () => {
+                this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 this.setState({softDropTimer: setInterval(() => {
-                    this.setState(drop(this.state, undefined, this.afterClearRows))
+                    let newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
+                    this.setState(newState)
+                    this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 }, 1000)}, () => {
                     document.addEventListener("keydown", this.handleKeyboardInput, false);
                 })
@@ -134,8 +175,28 @@ class TetrisBattle extends React.Component {
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
     }
 
-    beforeClearRows() {
-         
+    gameOverHandler(state) {
+        // I am KOed. Tell the opponent. 
+        console.log("I am KOed.")
+        this.props.socket.emit("KOed");
+        // Since I am KOed, the opponent's KO count gets incremented.
+        state = { ...state, oppKo: state.oppKo + 1 }
+        // clean the board. 
+        state = {...state, gameBoard: getCleanBoard(), active: [
+            { row: -1, col: -1, pivot: false },
+            { row: -1, col: -1, pivot: false },
+            { row: -1, col: -1, pivot: false },
+            { row: -1, col: -1, pivot: false }
+        ],
+        activeBlockType: null,
+        activeBlockOrientation: 0};
+        // release next tetromino 
+        state = releaseNextTetromino(state)
+        return state;
+    }
+
+    beforeClearRows(state) {
+         return state;
     }
 
     afterClearRows(state) {
@@ -268,10 +329,57 @@ class TetrisBattle extends React.Component {
     }
 
     render() {
+        let { gameBoard, active, oppGameBoard, oppActive, 
+            ko, oppKo, totalLinesSent, oppTotalLinesSent, 
+            nextTetType, oppNextTetType, heldBlock, oppHeldBlock } = this.state;
+        let myBoard = drawGhostPiece(gameBoard, ghostPiece(gameBoard, active), ghostColor(gameBoard, active));
+        let oppBoard = drawGhostPiece(oppGameBoard, ghostPiece(oppGameBoard, oppActive), ghostColor(oppGameBoard, oppActive)) 
         return (
             <div className="gameContainer">
+                {/* My game */}
+                <div className="statusBoard">
+                    <h3> HOLD </h3>
+                    <SingleTetBoard 
+                        color={tetrominoTypeToColor(heldBlock)} 
+                        pos={tetrominoTypeToNextPos(heldBlock)} />
+                    <h3> KO </h3>
+                    <h4> {ko} </h4>
+                    <h3> LINES SENT </h3>
+                    <h4> {totalLinesSent} </h4>
+                </div>
+                <div className="emptySpace1"></div>
                 <div className="gameBoard">
-                    {drawGhostPiece(this.state)}
+                    {myBoard}
+                </div>
+                <div className="emptySpace1"></div>
+                <div className="statusBoard">
+                    <h3> NEXT </h3>
+                    <SingleTetBoard 
+                        color={tetrominoTypeToColor(nextTetType)} 
+                        pos={tetrominoTypeToNextPos(nextTetType)} />
+                </div>
+                <div className="emptySpace3"></div>
+                {/* Opponent's game */}
+                <div className="statusBoard">
+                    <h3> HOLD </h3>
+                    <SingleTetBoard 
+                        color={tetrominoTypeToColor(oppHeldBlock)} 
+                        pos={tetrominoTypeToNextPos(oppHeldBlock)} />
+                    <h3> KO </h3>
+                    <h4> {oppKo} </h4>
+                    <h3> LINES SENT </h3>
+                    <h4> {oppTotalLinesSent} </h4>
+                </div>
+                <div className="emptySpace1"></div>
+                <div className="gameBoard">
+                    {oppBoard}
+                </div>
+                <div className="emptySpace1"></div>
+                <div className="statusBoard">
+                    <h3> NEXT </h3>
+                    <SingleTetBoard 
+                        color={tetrominoTypeToColor(oppNextTetType)} 
+                        pos={tetrominoTypeToNextPos(oppNextTetType)} />
                 </div>
             </div>
         );
