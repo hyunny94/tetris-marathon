@@ -52,6 +52,7 @@ class TetrisBattle extends React.Component {
             numClearedRow: null, // number of lines cleared by the previous tetromino landing.
             ko: 0, // number of times I KOed the opponent
             totalLinesSent: 0, // number of lines sent to the opponent
+            timeLeftInSec: 120, // time left in the game. 
             /* Below are OPPONENT's state */
             oppGameBoard: getCleanBoard(),
             oppActive: [
@@ -64,6 +65,7 @@ class TetrisBattle extends React.Component {
             oppTotalLinesSent: 0, // number of lines sent by the opponent 
             oppNextTetType: null, // next tetromino type for the opponent
             oppHeldBlock: null, // Tet held by the opponent
+            oppName: null, // Opponent's name
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
@@ -116,58 +118,72 @@ class TetrisBattle extends React.Component {
     }
 
     componentDidMount() {
+        let { socket, name } = this.props;
+
         // set up game-related socket 
-        this.props.socket.on("pauseOrResume", () => {
+        socket.on("pauseOrResume", () => {
             let softDropTimer = null 
             if (this.state.isPaused) {
                 softDropTimer = setInterval(() => {
                     let newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
                     this.setState(newState)
-                    this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
+                    socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 }, 1000)
             }
             this.setState(pauseOrResume(this.state, softDropTimer));
         });
 
         // display how many seconds of pause is left
-        this.props.socket.on("displayPauseSecLeft", (secLeft) => {
+        socket.on("displayPauseSecLeft", (secLeft) => {
             console.log(secLeft, " seconds left.")
         })
 
         // receive lines from opponents.. 
-        this.props.socket.on("addGarbageLines", (numGarbageLines) => {
+        socket.on("addGarbageLines", (numGarbageLines) => {
             console.log("received ", numGarbageLines, " garbage lines from the opponent.");
             this.setState({numGarbageToBeAdded: this.state.numGarbageToBeAdded + numGarbageLines});
         })
 
         // receive oppGameBoard, and oppActive update 
-        this.props.socket.on("boardChange", (oppGameBoard, oppActive, oppNextTetType) => {
+        socket.on("boardChange", (oppGameBoard, oppActive, oppNextTetType) => {
             this.setState({ oppGameBoard, oppActive, oppNextTetType })
         })
 
         // opponent used hold feature
-        this.props.socket.on("heldBlockChange", (oppHeldBlock) => {
+        socket.on("heldBlockChange", (oppHeldBlock) => {
             this.setState({ oppHeldBlock })
         })
 
         // opponent was KOed.
-        this.props.socket.on("KOed", () => {
+        socket.on("KOed", () => {
             this.setState({ ko: this.state.ko + 1 })
         })
 
         // opponent's totalLinesSent changed.
-        this.props.socket.on("linesSentChanged", (oppTotalLinesSent) => {
+        socket.on("linesSentChanged", (oppTotalLinesSent) => {
             this.setState({ oppTotalLinesSent })
         })
 
+        // opponent is telling me his name.
+        socket.on("myNameIs", (oppName) => {
+            this.setState({ oppName })
+        });
+
+        // server is telling us how many seconds are left in the game
+        socket.on("timeUpdate", () => {
+            this.setState({ timeLeftInSec: this.state.timeLeftInSec - 1 })
+        })
+
+        // Tell the opponent my name.
+        socket.emit("myNameIs", name)
         let newState = releaseNextTetromino(this.state) 
         this.setState(newState, 
             () => {
-                this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
+                socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 this.setState({softDropTimer: setInterval(() => {
                     let newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
                     this.setState(newState)
-                    this.props.socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
+                    socket.emit("boardChange", newState.gameBoard, newState.active, newState.nextTetType)
                 }, 1000)}, () => {
                     document.addEventListener("keydown", this.handleKeyboardInput, false);
                 })
@@ -337,11 +353,43 @@ class TetrisBattle extends React.Component {
     render() {
         let { gameBoard, active, oppGameBoard, oppActive, 
             ko, oppKo, totalLinesSent, oppTotalLinesSent, 
-            nextTetType, oppNextTetType, heldBlock, oppHeldBlock } = this.state;
+            nextTetType, oppNextTetType, heldBlock, oppHeldBlock, oppName,
+            timeLeftInSec } = this.state;
+        let { name } = this.props;
         let myBoard = drawGhostPiece(gameBoard, ghostPiece(gameBoard, active), ghostColor(gameBoard, active));
         let oppBoard = drawGhostPiece(oppGameBoard, ghostPiece(oppGameBoard, oppActive), ghostColor(oppGameBoard, oppActive)) 
+        let min = Math.floor(timeLeftInSec / 60);
+        // turn minute into text format
+        switch (min) {
+            case 0:
+                min = "00"
+                break
+            case 1:
+                min = "01"
+                break
+            case 2:
+                min = "02"
+                break
+            default:
+                break
+        }
+        let sec = timeLeftInSec % 60;
+        // turn second into text format
+        if (sec < 10) {
+            sec = "0" + sec
+        }
+
         return (
             <div className="gameContainer">
+                {/* Top status board */}
+                <div className="topBoard">
+                    <h3 style={{display: "inline-block", marginLeft: "0px", 
+                    width: "250px", height: "100px"}}> {name} </h3>
+                    <h3 style={{display: "inline-block", marginRight: "0px", 
+                    width: "250px", height: "100px", whiteSpace: "pre-line"}}> TIME {"\n"} {min}:{sec} </h3>
+                    <h3 style={{display: "inline-block", marginLeft: "0px", 
+                    width: "250px", height: "100px"}}> {oppName} </h3>
+                </div>
                 {/* My game */}
                 <div className="statusBoard">
                     <h3> HOLD </h3>
