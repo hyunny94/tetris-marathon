@@ -52,6 +52,7 @@ class TetrisMarathon extends React.Component {
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
+        this.gameOverHandler = this.gameOverHandler.bind(this);
         this.beforeClearRows = this.beforeClearRows.bind(this);
         this.afterClearRows = this.afterClearRows.bind(this);
     }
@@ -64,7 +65,7 @@ class TetrisMarathon extends React.Component {
             let softDropTimer = null
             if (this.state.isPaused) {
                 softDropTimer = setInterval(() => {
-                    this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows))
+                    this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler))
                 }, this.getSoftDropSpeed(this.state))
             } 
             this.setState(pauseOrResume(this.state, softDropTimer));
@@ -91,7 +92,7 @@ class TetrisMarathon extends React.Component {
                 newState = moveRight(this.state);
                 break;
             case 40: // down arrow
-                newState = drop(this.state, this.beforeClearRows, this.afterClearRows);
+                newState = drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
                 break;
             case 32: // space 
                 newState = {...handleSpaceInput(this.state), hardDrop: true};
@@ -107,7 +108,7 @@ class TetrisMarathon extends React.Component {
         this.setState(releaseNextTetromino(this.state), 
             () => {
                 this.setState({softDropTimer: setInterval(() => {
-                    this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows))
+                    this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler))
                 }, 1000)}, () => {
                     document.addEventListener("keydown", this.handleKeyboardInput, false);
                 })
@@ -118,6 +119,10 @@ class TetrisMarathon extends React.Component {
     componentWillUnmount() {
         clearInterval(this.state.softDropTimer);
         document.removeEventListener("keydown", this.handleKeyboardInput, false);
+    }
+
+    gameOverHandler(state) {
+        this.props.handleTetrisMarathonOver(state.score);
     }
 
     /**
@@ -140,7 +145,7 @@ class TetrisMarathon extends React.Component {
         clearInterval(state.softDropTimer);
         let softDropSpeed = this.getSoftDropSpeed(state);
         let softDropTimer = setInterval(() => {
-            this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows))
+            this.setState(drop(this.state, this.beforeClearRows, this.afterClearRows, this.gameOverHandler))
         }, softDropSpeed);
         return {...state, softDropTimer, hardDrop: false}
     }
