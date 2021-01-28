@@ -476,6 +476,8 @@ export function holdOrExchange(state) {
             }
         }
     }
+    // Hold is already used.
+    return state;
 }
 
 export function moveLeft(state) {

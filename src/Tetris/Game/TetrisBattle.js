@@ -155,6 +155,11 @@ class TetrisBattle extends React.Component {
             this.setState({ ko: this.state.ko + 1 })
         })
 
+        // opponent's totalLinesSent changed.
+        this.props.socket.on("linesSentChanged", (oppTotalLinesSent) => {
+            this.setState({ oppTotalLinesSent })
+        })
+
         let newState = releaseNextTetromino(this.state) 
         this.setState(newState, 
             () => {
@@ -293,8 +298,9 @@ class TetrisBattle extends React.Component {
         let linesToSend = Math.max(numGarbageLinesToSend - state.numGarbageToBeAdded, 0);
         if (linesToSend > 0) {
             this.props.socket.emit("addGarbageLines", linesToSend);
+            this.props.socket.emit("linesSentChanged", state.totalLinesSent + linesToSend)
         }
-        return { ...state, numGarbageToBeAdded }
+        return { ...state, numGarbageToBeAdded, totalLinesSent: state.totalLinesSent + linesToSend }
     }
 
     // Add state.numGarbageToBeAdded of lines to the bottom of the game board 
