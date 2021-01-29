@@ -228,12 +228,10 @@ class TetrisMarathon extends React.Component {
         return (
             <div className="gameContainer">
                 <div className="topBoard">
-                    <h3 style={{display: "inline-block", marginLeft: "250px", 
+                    <h3 style={{display: "inline-block",  
                     width: "250px", height: "50px"}}> {name} </h3>
-                    <h3 style={{display: "inline-block", marginRight: "250px", 
-                    width: "250px", height: "50px", whiteSpace: "pre-line"}}> SCORE </h3>
-                    <h4 style={{display: "inline-block", marginLeft: "500px", 
-                    width: "250px", height: "50px"}}> {score} </h4>
+                    <h3 style={{display: "inline-block", 
+                    width: "250px", height: "50px", whiteSpace: "pre-line"}}> SCORE {"\n"} {score} </h3>
                 </div>
                 <div className="statusBoard">
                     <h3> HOLD </h3>
@@ -245,9 +243,11 @@ class TetrisMarathon extends React.Component {
                     <h3> LINES </h3>
                     <h4> {totalLinesCleared} </h4>
                 </div>
+                <div className="emptySpace1"></div>
                 <div className="gameBoard">
                     {drawGhostPiece(gameBoard, ghostPiece(gameBoard, active), ghostColor(gameBoard, active))}
                 </div>
+                <div className="emptySpace1"></div>
                 <div className="statusBoard">
                     <h3> NEXT </h3>
                     <SingleTetBoard 

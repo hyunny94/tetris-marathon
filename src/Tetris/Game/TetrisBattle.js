@@ -383,12 +383,12 @@ class TetrisBattle extends React.Component {
             <div className="gameContainer">
                 {/* Top status board */}
                 <div className="topBoard">
-                    <h3 style={{display: "inline-block", marginLeft: "0px", 
-                    width: "250px", height: "100px"}}> {name} </h3>
-                    <h3 style={{display: "inline-block", marginRight: "0px", 
-                    width: "250px", height: "100px", whiteSpace: "pre-line"}}> TIME {"\n"} {min}:{sec} </h3>
-                    <h3 style={{display: "inline-block", marginLeft: "0px", 
-                    width: "250px", height: "100px"}}> {oppName} </h3>
+                    <h3 style={{display: "inline-block", 
+                    width: "330px", height: "100px"}}> {name} </h3>
+                    <h3 style={{display: "inline-block", 
+                    width: "330px", height: "100px", whiteSpace: "pre-line"}}> TIME {"\n"} {min}:{sec} </h3>
+                    <h3 style={{display: "inline-block", 
+                    width: "330px", height: "100px"}}> {oppName} </h3>
                 </div>
                 {/* My game */}
                 <div className="statusBoard">
