@@ -26,7 +26,7 @@ class Tetris extends React.Component {
     }
 
     callGetLeadersAPI() {
-        fetch(process.env.REACT_APP_NODE_DEV_ENDPOINT + "/api/v1/ranks", {
+        fetch(process.env.REACT_APP_NODE_PROD_ENDPOINT + "/api/v1/ranks", {
             headers: {
                 'Origin': 'https://www.kyothrees.com',
                 // 'Origin': 'http://localhost:3000'
@@ -58,7 +58,7 @@ class Tetris extends React.Component {
         this.callGetLeadersAPI();
 
         // set up socket connection
-        const socket = socketIOClient(process.env.REACT_APP_NODE_DEV_ENDPOINT)
+        const socket = socketIOClient(process.env.REACT_APP_NODE_PROD_ENDPOINT)
 
         socket.on("matched", () => {
             this.handleTetrisBattleStart()
@@ -106,7 +106,7 @@ class Tetris extends React.Component {
         this.setState({
             gameState: 0
         }, () => {
-            fetch(process.env.REACT_APP_NODE_DEV_ENDPOINT + '/api/v1/ranks', {
+            fetch(process.env.REACT_APP_NODE_PROD_ENDPOINT + '/api/v1/ranks', {
                 // fetch('https://kyotris.com' + '/api/v1/ranks', {
                     method: 'POST', // *GET, POST, PUT, DELETE, etc.
                     mode: 'cors', // no-cors, cors, *same-origin
