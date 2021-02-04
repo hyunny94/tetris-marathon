@@ -79,3 +79,6 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/tr
 ### Main game logic order 
 - drop() -> beforeClearRows() -> clearRows() -> afterClearRows() -> releaseNextTetromino()
 - beforeClearRows() and afterClearRows() are game-specific.
+
+### Understanding the gameboard
+The gameboard has 40 rows of which the latter 20 lines are what the players see. And 21st row is the first row from the top that the players see.

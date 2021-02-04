@@ -96,7 +96,7 @@ class TetrisMarathon extends React.Component {
                 break;
             case 32: // space 
                 newState = {...handleSpaceInput(this.state), hardDrop: true};
-                newState = drop(newState, this.beforeClearRows, this.afterClearRows);
+                newState = drop(newState, this.beforeClearRows, this.afterClearRows, this.gameOverHandler);
                 break;
             default:
                 break;

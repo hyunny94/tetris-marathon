@@ -53,6 +53,7 @@ class TetrisBattle extends React.Component {
             ko: 0, // number of times I KOed the opponent
             totalLinesSent: 0, // number of lines sent to the opponent
             timeLeftInSec: 120, // time left in the game. 
+            resultText: null, // final game result (set after the game is over) [YOU WIN!, YOU LOSE!, DRAW!]
             /* Below are OPPONENT's state */
             oppGameBoard: getCleanBoard(),
             oppActive: [
@@ -66,6 +67,7 @@ class TetrisBattle extends React.Component {
             oppNextTetType: null, // next tetromino type for the opponent
             oppHeldBlock: null, // Tet held by the opponent
             oppName: null, // Opponent's name
+            oppResultText: null, // final game result (set after the game is over) [YOU WIN!, YOU LOSE!, DRAW!]
         };
 
         this.handleKeyboardInput = this.handleKeyboardInput.bind(this);
@@ -108,7 +110,7 @@ class TetrisBattle extends React.Component {
                 break;
             case 32: // space 
                 newState = handleSpaceInput(this.state);
-                newState = drop(newState, this.beforeClearRows, this.afterClearRows)
+                newState = drop(newState, this.beforeClearRows, this.afterClearRows, this.gameOverHandler)
                 break;
             default:
                 break;
@@ -118,7 +120,7 @@ class TetrisBattle extends React.Component {
     }
 
     componentDidMount() {
-        let { socket, name } = this.props;
+        let { socket, name, handleTetrisBattleOver } = this.props;
 
         // set up game-related socket 
         socket.on("pauseOrResume", () => {
@@ -174,6 +176,37 @@ class TetrisBattle extends React.Component {
             this.setState({ timeLeftInSec: this.state.timeLeftInSec - 1 })
         })
 
+        // Game is over
+        socket.on("game over", () => {
+            let result = this.didIWinDrawLose(this.state);
+            console.log("result is: ", result)
+            let resultText;
+            let oppResultText;
+            if (result === 1) {
+                resultText = "YOU WIN!"
+                oppResultText = "YOU LOSE!"
+            } else if (result === 2) {
+                resultText = "DRAW!"
+                oppResultText = "DRAW!"
+            } else if (result === 3) {
+                resultText = "YOU LOSE!"
+                oppResultText = "YOU WIN!"
+            } else {
+                resultText = "ERROR!"
+                oppResultText = "ERROR!"
+            }
+            this.setState({ resultText, oppResultText }, () => {
+                // disable user input
+                document.removeEventListener("keydown", this.handleKeyboardInput, false); 
+                // stop drop interval
+                clearInterval(this.state.softDropTimer);
+                // this brings the screen back to the main page.
+                setTimeout(() => {
+                    handleTetrisBattleOver()
+                }, 5000)
+            })
+        })
+
         // Tell the opponent my name.
         socket.emit("myNameIs", name)
         let newState = releaseNextTetromino(this.state) 
@@ -191,11 +224,8 @@ class TetrisBattle extends React.Component {
         );
     }
 
-    componentWillUnmount() {
-        clearInterval(this.state.softDropTimer);
-        document.removeEventListener("keydown", this.handleKeyboardInput, false);
-    }
-
+    // TODO: this should be renamed to gameBoardFullHandler or sth, because full gameboard doesn't
+    // necessarily mean the game is over. 
     gameOverHandler(state) {
         // I am KOed. Tell the opponent. 
         console.log("I am KOed.")
@@ -214,6 +244,52 @@ class TetrisBattle extends React.Component {
         // release next tetromino 
         state = releaseNextTetromino(state)
         return state;
+    }
+
+    /**
+     * Return 1 if i won, 2 if drew, 3 if lost.
+     * First check # of KOs and then # of lines sent. 
+     * If both are equal, lastly check the highest row with any of its columns filled. 
+     * (NOTE: lower row number is higher on the gameboard.)
+     * If all are equal then the result is a draw. 
+     * @param {*} state 
+     */
+    didIWinDrawLose(state) {
+        let { ko, oppKo, totalLinesSent, oppTotalLinesSent, gameBoard, oppGameBoard } = state;
+        if (ko === oppKo) {
+            if (totalLinesSent === oppTotalLinesSent) {
+                let highestRow = this.getHighestFilledRow(gameBoard);
+                let oppHighestRow = this.getHighestFilledRow(oppGameBoard);
+                if (highestRow === oppHighestRow) {
+                    return 2;
+                } else if (highestRow < oppHighestRow) {
+                     return 3;
+                } else {
+                    return 1;
+                }
+            } else if (totalLinesSent > oppTotalLinesSent) {
+                return 1;
+            } else {
+                return 3;
+            }
+        } else if (ko > oppKo) {
+            return 1;
+        } else {
+            return 3;
+        }
+    }
+
+    /**
+     * Return the row number of the highest row with any of its columns filled.
+     * @param {*} state 
+     */
+    getHighestFilledRow(gameBoard) {
+        for (let r = 20; r < gameBoard.length; r++) {
+            for (let c = 0; c < 10; c++) {
+                if (!gameBoard[r][c].active && gameBoard[r][c].filled) return r;    
+            }
+        }
+        return 41;
     }
 
     beforeClearRows(state) {
@@ -354,7 +430,7 @@ class TetrisBattle extends React.Component {
         let { gameBoard, active, oppGameBoard, oppActive, 
             ko, oppKo, totalLinesSent, oppTotalLinesSent, 
             nextTetType, oppNextTetType, heldBlock, oppHeldBlock, oppName,
-            timeLeftInSec } = this.state;
+            timeLeftInSec, resultText, oppResultText } = this.state;
         let { name } = this.props;
         let myBoard = drawGhostPiece(gameBoard, ghostPiece(gameBoard, active), ghostColor(gameBoard, active));
         let oppBoard = drawGhostPiece(oppGameBoard, ghostPiece(oppGameBoard, oppActive), ghostColor(oppGameBoard, oppActive)) 
@@ -404,6 +480,9 @@ class TetrisBattle extends React.Component {
                 <div className="emptySpace1"></div>
                 <div className="gameBoard">
                     {myBoard}
+                    {resultText !== null && 
+                        <h4> {resultText} </h4>
+                    }
                 </div>
                 <div className="emptySpace1"></div>
                 <div className="statusBoard">
@@ -427,6 +506,9 @@ class TetrisBattle extends React.Component {
                 <div className="emptySpace1"></div>
                 <div className="gameBoard">
                     {oppBoard}
+                    {oppResultText !== null && 
+                        <h4> {oppResultText} </h4>
+                    }
                 </div>
                 <div className="emptySpace1"></div>
                 <div className="statusBoard">

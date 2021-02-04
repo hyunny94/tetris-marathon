@@ -22,10 +22,11 @@ class Tetris extends React.Component {
         this.handleTetrisMarathonStart = this.handleTetrisMarathonStart.bind(this);
         this.handleTetrisMarathonOver = this.handleTetrisMarathonOver.bind(this);
         this.playTetrisBattleWithSomeone = this.playTetrisBattleWithSomeone.bind(this);
+        this.handleTetrisBattleOver = this.handleTetrisBattleOver.bind(this);
     }
 
     callGetLeadersAPI() {
-        fetch(process.env.REACT_APP_NODE_PROD_ENDPOINT + "/api/v1/ranks", {
+        fetch(process.env.REACT_APP_NODE_DEV_ENDPOINT + "/api/v1/ranks", {
             headers: {
                 'Origin': 'https://www.kyothrees.com',
                 // 'Origin': 'http://localhost:3000'
@@ -56,18 +57,17 @@ class Tetris extends React.Component {
         // get rankings 
         this.callGetLeadersAPI();
 
-        // set up socket listeners
-        const socket = socketIOClient(process.env.REACT_APP_NODE_PROD_ENDPOINT)
+        // set up socket connection
+        const socket = socketIOClient(process.env.REACT_APP_NODE_DEV_ENDPOINT)
+
         socket.on("matched", () => {
             this.handleTetrisBattleStart()
         })
+
         socket.on("entered waiting room", () => {
             console.log("I got put in the waiting room.")
         })
-        socket.on("game over", () => {
-            console.log("game over");
-            this.handleTetrisBattleOver()
-        })
+
         this.setState({ socket })
     }
 
@@ -106,7 +106,7 @@ class Tetris extends React.Component {
         this.setState({
             gameState: 0
         }, () => {
-            fetch(process.env.REACT_APP_NODE_PROD_ENDPOINT + '/api/v1/ranks', {
+            fetch(process.env.REACT_APP_NODE_DEV_ENDPOINT + '/api/v1/ranks', {
                 // fetch('https://kyotris.com' + '/api/v1/ranks', {
                     method: 'POST', // *GET, POST, PUT, DELETE, etc.
                     mode: 'cors', // no-cors, cors, *same-origin
@@ -165,7 +165,8 @@ class Tetris extends React.Component {
             case 3:
                 screen = <TetrisBattle 
                             socket={this.state.socket}
-                            name={this.state.name} />;
+                            name={this.state.name}
+                            handleTetrisBattleOver={this.handleTetrisBattleOver} />;
                 break;
             default:
                 break;
