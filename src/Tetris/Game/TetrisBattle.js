@@ -9,23 +9,11 @@ import { PERFECT_CLEAR_GARBAGE, TWO_ROWS_CLEARED_GARBAGE, THREE_ROWS_CLEARED_GAR
     TETRIS_GARBAGE, BTB_TETRIS_GARBAGE } from '../Constants';
 
 
-/** Tetris Battle Game mode is playered by two players going against each other. 
+/** 
+ *  Tetris Battle Game mode is played by two players going against each other. 
  *  The rule is described below.
- *  - Winner is determined by these factors in order (KO, lines sent)
- *  - If both the # of KOs and the lines sent are equal, it's a draw.
- * 
- *  TODO
- *  Front-end
- *  1. should display 2 boards (opponent's view as well)
- *  2. should keep a count of KOs and lines sent to the opponent
- *  3. should display remaining time starting from 2 minutes
- *  4.
- *  
- *  Game-logic
- *  1. when a tetromino reaches the ceiling, 
- *     it should clear the board and count as a KO for the opponent.
- *  2. certain line-clearing actions sends attacking lines to the opponent. 
- *  3. 
+ *  - Winner is determined by these factors in order (KO, lines sent, highest filled row)
+ *  - If all three are equal, it's a draw.
  * */ 
 class TetrisBattle extends React.Component {
     constructor(props) {
